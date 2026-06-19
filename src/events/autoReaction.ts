@@ -1,5 +1,5 @@
 import { Events, Message, EmbedBuilder } from "discord.js";
-import { prisma } from "../db";
+import { prisma } from "@/database/db";
 import type { ExtendedClient } from "../types";
 
 export default {
