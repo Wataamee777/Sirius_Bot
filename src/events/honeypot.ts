@@ -13,32 +13,18 @@ export default {
 		// サーバー外、またはBot自身のメッセージは無視
 		if (!message.guild || message.author.bot) return;
 
-		// 💡 1. メッセージ検知ログ
-		console.log(
-			`[Honeypot Test] メッセージ検知! チャンネルID: ${message.channelId}, ユーザー: ${message.author.tag}`,
-		);
-
 		// サーバー設定の取得（ここで1回だけ宣言）
 		const setting = await prisma.serverSetting.findUnique({
 			where: { serverId: message.guild.id },
 		});
 
-		// 💡 2. DBの取得結果ログ
-		console.log("[Honeypot Test] DBの設定値:", setting);
-
 		// 設定がない、またはハニーポットが無効な場合は何もしない
 		if (!setting || !setting.honeypotEnabled || !setting.honeypotChannelId) {
-			console.log(
-				"[Honeypot Test] スキップ: 設定が足りないか、有効化されていません。",
-			);
 			return;
 		}
 
 		// 対象チャンネル以外は無視
 		if (message.channelId !== setting.honeypotChannelId) {
-			console.log(
-				`[Honeypot Test] スキップ: チャンネルが一致しません。対象: ${setting.honeypotChannelId}`,
-			);
 			return;
 		}
 
@@ -47,9 +33,6 @@ export default {
 			message.member ??
 			(await message.guild.members.fetch(message.author.id).catch(() => null));
 		if (!member) {
-			console.log(
-				"[Honeypot Test] スキップ: メンバー情報が取得できませんでした。",
-			);
 			return;
 		}
 
@@ -61,7 +44,6 @@ export default {
 		if (
 			member.roles.cache.some((role) => honeypotIgnoreRoles.includes(role.id))
 		) {
-			console.log("[Honeypot Test] スキップ: 除外ロールを所持しています。");
 			return;
 		}
 
@@ -70,9 +52,6 @@ export default {
 			!member.bannable ||
 			member.permissions.has(PermissionsBitField.Flags.Administrator)
 		) {
-			console.log(
-				`[Honeypot] BANをスキップ: ${member.user.tag} は管理者か、Botより高い権限を持っています。bannable: ${member.bannable}`,
-			);
 			return;
 		}
 
@@ -82,8 +61,6 @@ export default {
 				reason: "ハニーポット検知 (自動BAN)",
 				deleteMessageSeconds: 24 * 60 * 60,
 			});
-
-			console.log(`[Honeypot Test] 成功: ${member.user.tag} をBANしました。`);
 
 			// 報告先チャンネルへの通知
 			if (setting.honeypotReportId) {
