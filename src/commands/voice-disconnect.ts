@@ -7,7 +7,7 @@ import {
 } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
-  .setName('mass-disconnect')
+  .setName('voice-disconnect')
   .setDescription('指定したボイスチャンネルの全員を強制的に切断させます')
   .addChannelOption(option =>
     option
