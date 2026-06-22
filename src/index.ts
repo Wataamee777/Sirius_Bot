@@ -354,7 +354,7 @@ const setupApiRoutes = (client: ExtendedClient, rest: REST) => {
 		},
 	);
 
-	
+
 // Auto Reaction emoji validation endpoint
 app.post(
 "/api/guilds/:id/validate-emoji",
