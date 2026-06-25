@@ -138,7 +138,8 @@ exports.Prisma.ServerSettingScalarFieldEnum = {
   honeypotChannelId: 'honeypotChannelId',
   honeypotEnabled: 'honeypotEnabled',
   honeypotIgnoreRole: 'honeypotIgnoreRole',
-  honeypotReportId: 'honeypotReportId'
+  honeypotReportId: 'honeypotReportId',
+  autoReactions: 'autoReactions'
 };
 
 exports.Prisma.AccountScalarFieldEnum = {
@@ -218,7 +219,8 @@ exports.Prisma.ServerSettingOrderByRelevanceFieldEnum = {
   inviteIgnoredChannels: 'inviteIgnoredChannels',
   honeypotChannelId: 'honeypotChannelId',
   honeypotIgnoreRole: 'honeypotIgnoreRole',
-  honeypotReportId: 'honeypotReportId'
+  honeypotReportId: 'honeypotReportId',
+  autoReactions: 'autoReactions'
 };
 
 exports.Prisma.AccountOrderByRelevanceFieldEnum = {

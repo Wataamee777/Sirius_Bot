@@ -354,80 +354,83 @@ const setupApiRoutes = (client: ExtendedClient, rest: REST) => {
 		},
 	);
 
+	// Auto Reaction emoji validation endpoint
+	app.post(
+		"/api/guilds/:id/validate-emoji",
+		express.json(),
+		async (req: Request<{ id: string }>, res: Response) => {
+			const guildId = req.params.id;
+			const { emoji } = req.body;
 
-// Auto Reaction emoji validation endpoint
-app.post(
-"/api/guilds/:id/validate-emoji",
-express.json(),
-async (req: Request<{ id: string }>, res: Response) => {
-const guildId = req.params.id;
-const { emoji } = req.body;
+			if (!emoji) return res.status(400).json({ error: "Missing emoji" });
 
-if (!emoji) return res.status(400).json({ error: "Missing emoji" });
+			try {
+				const validateEmoji = async (
+					c: Client,
+					gId: string,
+					emojiStr: string,
+				) => {
+					const guild = c.guilds.cache.get(gId);
+					if (!guild) return { valid: false, error: "Guild not found" };
 
-try {
-const validateEmoji = async (c: Client, gId: string, emojiStr: string) => {
-const guild = c.guilds.cache.get(gId);
-if (!guild) return { valid: false, error: "Guild not found" };
+					// Check if emoji is a custom emoji (format: :name:)
+					if (emojiStr.startsWith(":") && emojiStr.endsWith(":")) {
+						const emojiName = emojiStr.slice(1, -1);
+						const customEmoji = guild.emojis.cache.find(
+							(e) => e.name === emojiName,
+						);
+						if (!customEmoji) {
+							return {
+								valid: false,
+								error: `Custom emoji ':${emojiName}:' not found in this server`,
+							};
+						}
+						return { valid: true };
+					}
 
-// Check if emoji is a custom emoji (format: :name:)
-if (emojiStr.startsWith(":") && emojiStr.endsWith(":")) {
-const emojiName = emojiStr.slice(1, -1);
-const customEmoji = guild.emojis.cache.find(
-(e) => e.name === emojiName,
-);
-if (!customEmoji) {
-return {
-valid: false,
-error: `Custom emoji ':${emojiName}:' not found in this server`,
-};
-}
-return { valid: true };
-}
+					// Unicode emoji validation (basic check)
+					return { valid: true };
+				};
 
-// Unicode emoji validation (basic check)
-return { valid: true };
-};
+				if (!client.shard) {
+					const result = await validateEmoji(client, guildId, emoji);
+					return res.json(result);
+				}
 
-if (!client.shard) {
-const result = await validateEmoji(client, guildId, emoji);
-return res.json(result);
-}
+				const results = await client.shard.broadcastEval(
+					async (c, { gId, emojiStr }) => {
+						const guild = c.guilds.cache.get(gId);
+						if (!guild) return { valid: false, error: "Guild not found" };
 
-const results = await client.shard.broadcastEval(
-async (c, { gId, emojiStr }) => {
-const guild = c.guilds.cache.get(gId);
-if (!guild) return { valid: false, error: "Guild not found" };
+						if (emojiStr.startsWith(":") && emojiStr.endsWith(":")) {
+							const emojiName = emojiStr.slice(1, -1);
+							const customEmoji = guild.emojis.cache.find(
+								(e) => e.name === emojiName,
+							);
+							if (!customEmoji) {
+								return {
+									valid: false,
+									error: `Custom emoji ':${emojiName}:' not found in this server`,
+								};
+							}
+							return { valid: true };
+						}
 
-if (emojiStr.startsWith(":") && emojiStr.endsWith(":")) {
-const emojiName = emojiStr.slice(1, -1);
-const customEmoji = guild.emojis.cache.find(
-(e) => e.name === emojiName,
-);
-if (!customEmoji) {
-return {
-valid: false,
-error: `Custom emoji ':${emojiName}:' not found in this server`,
-};
-}
-return { valid: true };
-}
+						return { valid: true };
+					},
+					{ context: { gId: guildId, emojiStr: emoji } },
+				);
 
-return { valid: true };
-},
-{ context: { gId: guildId, emojiStr: emoji } },
-);
+				const result = results.find((r) => r !== null);
+				return res.json(result || { valid: false, error: "Guild not found" });
+			} catch (err: unknown) {
+				console.error("Emoji validation error:", err);
+				return res.status(500).json({ error: "Internal server error" });
+			}
+		},
+	);
 
-const result = results.find((r) => r !== null);
-return res.json(result || { valid: false, error: "Guild not found" });
-} catch (err: unknown) {
-console.error("Emoji validation error:", err);
-return res.status(500).json({ error: "Internal server error" });
-}
-},
-);
-
-app.listen(process.env.PORT || 3000, () => {
+	app.listen(process.env.PORT || 3000, () => {
 		console.log("Web server started");
 	});
 };

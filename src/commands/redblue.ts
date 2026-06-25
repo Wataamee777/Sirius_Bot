@@ -118,7 +118,9 @@ async function handleGameTimeout(userId: string) {
 }
 
 // 🔲 ボタン押下時のハンドラー
-export async function handleRedBlueButtonInteraction(interaction: ButtonInteraction) {
+export async function handleRedBlueButtonInteraction(
+	interaction: ButtonInteraction,
+) {
 	if (
 		interaction.customId !== "redblue_red" &&
 		interaction.customId !== "redblue_blue"

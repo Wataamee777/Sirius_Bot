@@ -26,6 +26,7 @@ model ServerSetting {
   honeypotEnabled       Boolean  @default(false)
   honeypotIgnoreRole    String?  @db.Text
   honeypotReportId      String?
+  autoReactions         String?  @db.Text
 }
 
 model Account {

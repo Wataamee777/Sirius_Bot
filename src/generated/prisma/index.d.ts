@@ -1341,6 +1341,7 @@ export namespace Prisma {
     honeypotEnabled: boolean | null
     honeypotIgnoreRole: string | null
     honeypotReportId: string | null
+    autoReactions: string | null
   }
 
   export type ServerSettingMaxAggregateOutputType = {
@@ -1362,6 +1363,7 @@ export namespace Prisma {
     honeypotEnabled: boolean | null
     honeypotIgnoreRole: string | null
     honeypotReportId: string | null
+    autoReactions: string | null
   }
 
   export type ServerSettingCountAggregateOutputType = {
@@ -1383,6 +1385,7 @@ export namespace Prisma {
     honeypotEnabled: number
     honeypotIgnoreRole: number
     honeypotReportId: number
+    autoReactions: number
     _all: number
   }
 
@@ -1406,6 +1409,7 @@ export namespace Prisma {
     honeypotEnabled?: true
     honeypotIgnoreRole?: true
     honeypotReportId?: true
+    autoReactions?: true
   }
 
   export type ServerSettingMaxAggregateInputType = {
@@ -1427,6 +1431,7 @@ export namespace Prisma {
     honeypotEnabled?: true
     honeypotIgnoreRole?: true
     honeypotReportId?: true
+    autoReactions?: true
   }
 
   export type ServerSettingCountAggregateInputType = {
@@ -1448,6 +1453,7 @@ export namespace Prisma {
     honeypotEnabled?: true
     honeypotIgnoreRole?: true
     honeypotReportId?: true
+    autoReactions?: true
     _all?: true
   }
 
@@ -1542,6 +1548,7 @@ export namespace Prisma {
     honeypotEnabled: boolean
     honeypotIgnoreRole: string | null
     honeypotReportId: string | null
+    autoReactions: string | null
     _count: ServerSettingCountAggregateOutputType | null
     _min: ServerSettingMinAggregateOutputType | null
     _max: ServerSettingMaxAggregateOutputType | null
@@ -1580,6 +1587,7 @@ export namespace Prisma {
     honeypotEnabled?: boolean
     honeypotIgnoreRole?: boolean
     honeypotReportId?: boolean
+    autoReactions?: boolean
   }, ExtArgs["result"]["serverSetting"]>
 
 
@@ -1603,9 +1611,10 @@ export namespace Prisma {
     honeypotEnabled?: boolean
     honeypotIgnoreRole?: boolean
     honeypotReportId?: boolean
+    autoReactions?: boolean
   }
 
-  export type ServerSettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "serverId" | "spamBlockEnabled" | "inviteBlockEnabled" | "spamReportChannelId" | "inviteReportChannelId" | "createdAt" | "updatedAt" | "ignoredChannels" | "ignoredRoles" | "spamIgnoredRoles" | "spamIgnoredChannels" | "inviteIgnoredRoles" | "inviteIgnoredChannels" | "honeypotChannelId" | "honeypotEnabled" | "honeypotIgnoreRole" | "honeypotReportId", ExtArgs["result"]["serverSetting"]>
+  export type ServerSettingOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "serverId" | "spamBlockEnabled" | "inviteBlockEnabled" | "spamReportChannelId" | "inviteReportChannelId" | "createdAt" | "updatedAt" | "ignoredChannels" | "ignoredRoles" | "spamIgnoredRoles" | "spamIgnoredChannels" | "inviteIgnoredRoles" | "inviteIgnoredChannels" | "honeypotChannelId" | "honeypotEnabled" | "honeypotIgnoreRole" | "honeypotReportId" | "autoReactions", ExtArgs["result"]["serverSetting"]>
 
   export type $ServerSettingPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ServerSetting"
@@ -1629,6 +1638,7 @@ export namespace Prisma {
       honeypotEnabled: boolean
       honeypotIgnoreRole: string | null
       honeypotReportId: string | null
+      autoReactions: string | null
     }, ExtArgs["result"]["serverSetting"]>
     composites: {}
   }
@@ -2016,6 +2026,7 @@ export namespace Prisma {
     readonly honeypotEnabled: FieldRef<"ServerSetting", 'Boolean'>
     readonly honeypotIgnoreRole: FieldRef<"ServerSetting", 'String'>
     readonly honeypotReportId: FieldRef<"ServerSetting", 'String'>
+    readonly autoReactions: FieldRef<"ServerSetting", 'String'>
   }
     
 
@@ -7192,7 +7203,8 @@ export namespace Prisma {
     honeypotChannelId: 'honeypotChannelId',
     honeypotEnabled: 'honeypotEnabled',
     honeypotIgnoreRole: 'honeypotIgnoreRole',
-    honeypotReportId: 'honeypotReportId'
+    honeypotReportId: 'honeypotReportId',
+    autoReactions: 'autoReactions'
   };
 
   export type ServerSettingScalarFieldEnum = (typeof ServerSettingScalarFieldEnum)[keyof typeof ServerSettingScalarFieldEnum]
@@ -7296,7 +7308,8 @@ export namespace Prisma {
     inviteIgnoredChannels: 'inviteIgnoredChannels',
     honeypotChannelId: 'honeypotChannelId',
     honeypotIgnoreRole: 'honeypotIgnoreRole',
-    honeypotReportId: 'honeypotReportId'
+    honeypotReportId: 'honeypotReportId',
+    autoReactions: 'autoReactions'
   };
 
   export type ServerSettingOrderByRelevanceFieldEnum = (typeof ServerSettingOrderByRelevanceFieldEnum)[keyof typeof ServerSettingOrderByRelevanceFieldEnum]
@@ -7420,6 +7433,7 @@ export namespace Prisma {
     honeypotEnabled?: BoolFilter<"ServerSetting"> | boolean
     honeypotIgnoreRole?: StringNullableFilter<"ServerSetting"> | string | null
     honeypotReportId?: StringNullableFilter<"ServerSetting"> | string | null
+    autoReactions?: StringNullableFilter<"ServerSetting"> | string | null
   }
 
   export type ServerSettingOrderByWithRelationInput = {
@@ -7441,6 +7455,7 @@ export namespace Prisma {
     honeypotEnabled?: SortOrder
     honeypotIgnoreRole?: SortOrderInput | SortOrder
     honeypotReportId?: SortOrderInput | SortOrder
+    autoReactions?: SortOrderInput | SortOrder
     _relevance?: ServerSettingOrderByRelevanceInput
   }
 
@@ -7466,6 +7481,7 @@ export namespace Prisma {
     honeypotEnabled?: BoolFilter<"ServerSetting"> | boolean
     honeypotIgnoreRole?: StringNullableFilter<"ServerSetting"> | string | null
     honeypotReportId?: StringNullableFilter<"ServerSetting"> | string | null
+    autoReactions?: StringNullableFilter<"ServerSetting"> | string | null
   }, "id" | "serverId">
 
   export type ServerSettingOrderByWithAggregationInput = {
@@ -7487,6 +7503,7 @@ export namespace Prisma {
     honeypotEnabled?: SortOrder
     honeypotIgnoreRole?: SortOrderInput | SortOrder
     honeypotReportId?: SortOrderInput | SortOrder
+    autoReactions?: SortOrderInput | SortOrder
     _count?: ServerSettingCountOrderByAggregateInput
     _max?: ServerSettingMaxOrderByAggregateInput
     _min?: ServerSettingMinOrderByAggregateInput
@@ -7514,6 +7531,7 @@ export namespace Prisma {
     honeypotEnabled?: BoolWithAggregatesFilter<"ServerSetting"> | boolean
     honeypotIgnoreRole?: StringNullableWithAggregatesFilter<"ServerSetting"> | string | null
     honeypotReportId?: StringNullableWithAggregatesFilter<"ServerSetting"> | string | null
+    autoReactions?: StringNullableWithAggregatesFilter<"ServerSetting"> | string | null
   }
 
   export type AccountWhereInput = {
@@ -7884,6 +7902,7 @@ export namespace Prisma {
     honeypotEnabled?: boolean
     honeypotIgnoreRole?: string | null
     honeypotReportId?: string | null
+    autoReactions?: string | null
   }
 
   export type ServerSettingUncheckedCreateInput = {
@@ -7905,6 +7924,7 @@ export namespace Prisma {
     honeypotEnabled?: boolean
     honeypotIgnoreRole?: string | null
     honeypotReportId?: string | null
+    autoReactions?: string | null
   }
 
   export type ServerSettingUpdateInput = {
@@ -7926,6 +7946,7 @@ export namespace Prisma {
     honeypotEnabled?: BoolFieldUpdateOperationsInput | boolean
     honeypotIgnoreRole?: NullableStringFieldUpdateOperationsInput | string | null
     honeypotReportId?: NullableStringFieldUpdateOperationsInput | string | null
+    autoReactions?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ServerSettingUncheckedUpdateInput = {
@@ -7947,6 +7968,7 @@ export namespace Prisma {
     honeypotEnabled?: BoolFieldUpdateOperationsInput | boolean
     honeypotIgnoreRole?: NullableStringFieldUpdateOperationsInput | string | null
     honeypotReportId?: NullableStringFieldUpdateOperationsInput | string | null
+    autoReactions?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ServerSettingCreateManyInput = {
@@ -7968,6 +7990,7 @@ export namespace Prisma {
     honeypotEnabled?: boolean
     honeypotIgnoreRole?: string | null
     honeypotReportId?: string | null
+    autoReactions?: string | null
   }
 
   export type ServerSettingUpdateManyMutationInput = {
@@ -7989,6 +8012,7 @@ export namespace Prisma {
     honeypotEnabled?: BoolFieldUpdateOperationsInput | boolean
     honeypotIgnoreRole?: NullableStringFieldUpdateOperationsInput | string | null
     honeypotReportId?: NullableStringFieldUpdateOperationsInput | string | null
+    autoReactions?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ServerSettingUncheckedUpdateManyInput = {
@@ -8010,6 +8034,7 @@ export namespace Prisma {
     honeypotEnabled?: BoolFieldUpdateOperationsInput | boolean
     honeypotIgnoreRole?: NullableStringFieldUpdateOperationsInput | string | null
     honeypotReportId?: NullableStringFieldUpdateOperationsInput | string | null
+    autoReactions?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type AccountCreateInput = {
@@ -8472,6 +8497,7 @@ export namespace Prisma {
     honeypotEnabled?: SortOrder
     honeypotIgnoreRole?: SortOrder
     honeypotReportId?: SortOrder
+    autoReactions?: SortOrder
   }
 
   export type ServerSettingMaxOrderByAggregateInput = {
@@ -8493,6 +8519,7 @@ export namespace Prisma {
     honeypotEnabled?: SortOrder
     honeypotIgnoreRole?: SortOrder
     honeypotReportId?: SortOrder
+    autoReactions?: SortOrder
   }
 
   export type ServerSettingMinOrderByAggregateInput = {
@@ -8514,6 +8541,7 @@ export namespace Prisma {
     honeypotEnabled?: SortOrder
     honeypotIgnoreRole?: SortOrder
     honeypotReportId?: SortOrder
+    autoReactions?: SortOrder
   }
 
   export type StringWithAggregatesFilter<$PrismaModel = never> = {
