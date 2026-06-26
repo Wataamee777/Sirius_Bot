@@ -1,47 +1,43 @@
 import {
-	type ChatInputCommandInteraction,
-	EmbedBuilder,
-	SlashCommandBuilder,
-	ActionRowBuilder,
-	ButtonBuilder,
-	ButtonStyle,
+    type ChatInputCommandInteraction,
+    EmbedBuilder,
+    SlashCommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
 } from "discord.js";
 
-const command = {
-	data: new SlashCommandBuilder()
-		.setName("account")
-		.setDescription("経済アカウントについての情報を表示します")
-		.addSubcommand((sub) =>
-			sub.setName("register").setDescription("経済アカウントを登録します"),
-		),
-};
+// 変数名を command から data に変更し、直接エクスポート
+export const data = new SlashCommandBuilder()
+    .setName("account")
+    .setDescription("経済アカウントについての情報を表示します")
+    .addSubcommand((sub) =>
+        sub.setName("register").setDescription("経済アカウントを登録します"),
+    );
 
-async function execute(interaction: ChatInputCommandInteraction) {
-	const subcommand = interaction.options.getSubcommand();
+export async function execute(interaction: ChatInputCommandInteraction) {
+    const subcommand = interaction.options.getSubcommand();
 
-	if (subcommand === "register") {
-		const successEmbed = new EmbedBuilder()
-			.setColor("Blue")
-			.setTitle("アカウント登録")
-			.setDescription(
-				"経済アカウントを登録するには以下のボタンをクリックしてください。",
-			);
+    if (subcommand === "register") {
+        const successEmbed = new EmbedBuilder()
+            .setColor("Blue")
+            .setTitle("アカウント登録")
+            .setDescription(
+                "経済アカウントを登録するには以下のボタンをクリックしてください。",
+            );
 
-		// ボタンを作成
-		const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
-			new ButtonBuilder()
-				.setLabel("アカウント登録ページへ")
-				.setStyle(ButtonStyle.Link)
-				.setURL("https://siriusbot.f5.si/register"),
-		);
+        // ※先ほど分けた新しい登録ページのURL（/dashboard/register など）に変更するのをお忘れなく！
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+                .setLabel("アカウント登録ページへ")
+                .setStyle(ButtonStyle.Link)
+                .setURL("https://siriusbot.f5.si/login"), 
+        );
 
-		// 💡 components に row を追加してボタンを一緒に送信する
-		await interaction.reply({
-			embeds: [successEmbed],
-			components: [row],
-			ephemeral: true,
-		});
-	}
+        await interaction.reply({
+            embeds: [successEmbed],
+            components: [row],
+            ephemeral: true,
+        });
+    }
 }
-
-export { command, execute };

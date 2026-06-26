@@ -6,5 +6,15 @@
 	"json.format.enable": false,
 	"[json]": {
 		"editor.defaultFormatter": "biomejs.biome"
+	},
+	"chat.tools.terminal.autoApprove": {
+		"/^powershell -NoProfile -Command \"Get-Content src/commands/admin\\.ts \\| Select-Object -Index 612\\.\\.626 \\| ForEach-Object \\{ '\\{0,4\\}: \\{1\\}' -f \\(\\$global:i\\+\\+,\\$_\\) \\}\"$/": {
+			"approve": true,
+			"matchCommandLine": true
+		},
+		"/^node -e \"const fs=require\\('fs'\\); const lines=fs\\.readFileSync\\('src/commands/admin\\.ts','utf8'\\)\\.split\\(/\\\\r\\?\\\\n/\\); lines\\.forEach\\(\\(line,i\\)=>\\{ if\\(line\\.includes\\('prisma\\.users'\\)\\|\\|line\\.includes\\('getUsersRecords\\(\\)'\\)\\|\\|line\\.includes\\('prisma\\.user\\.findMany'\\)\\) console\\.log\\(i\\+1, line\\); \\}\\);\"$/": {
+			"approve": true,
+			"matchCommandLine": true
+		}
 	}
 }
