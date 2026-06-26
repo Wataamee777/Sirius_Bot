@@ -155,15 +155,16 @@ type DbModelPage = {
 };
 
 const getUsersRecords = async () => {
-	if ("users" in prisma && typeof (prisma as any).users?.findMany === "function") {
+	if (
+		"users" in prisma &&
+		typeof (prisma as any).users?.findMany === "function"
+	) {
 		return (prisma as any).users.findMany({ orderBy: { id: "asc" } });
 	}
 	return [] as unknown[];
 };
 
-const buildDbPages = (
-	models: DbModelPage[],
-) => {
+const buildDbPages = (models: DbModelPage[]) => {
 	const pages: Array<{ title: string; description: string }> = [];
 	const MAX_DESCRIPTION_LENGTH = 3600;
 
@@ -219,7 +220,7 @@ const createDbEmbed = (
 	return new EmbedBuilder()
 		.setColor(0x5865f2)
 		.setAuthor({
-			name: `🗄️ DB 登録情報 (${pageIndex + 1}/${totalPages})`, 
+			name: `🗄️ DB 登録情報 (${pageIndex + 1}/${totalPages})`,
 			iconURL: SUCCESS_ICON_URL,
 		})
 		.setTitle(page.title)
@@ -240,7 +241,10 @@ const createDbPager = (pageIndex: number, totalPages: number) => {
 		.setStyle(ButtonStyle.Primary)
 		.setDisabled(pageIndex >= totalPages - 1);
 
-	return new ActionRowBuilder<ButtonBuilder>().addComponents(prevButton, nextButton);
+	return new ActionRowBuilder<ButtonBuilder>().addComponents(
+		prevButton,
+		nextButton,
+	);
 };
 
 export const handleAdminDbButtonInteraction = async (
@@ -260,13 +264,21 @@ export const handleAdminDbButtonInteraction = async (
 	const action = interaction.customId.startsWith("admin-db-prev")
 		? "prev"
 		: interaction.customId.startsWith("admin-db-next")
-		? "next"
-		: null;
+			? "next"
+			: null;
 	if (!action) {
 		return;
 	}
 
-	const [serverSettings, accounts, sessions, users, oldUsers, verifications, survivalRankings] = await Promise.all([
+	const [
+		serverSettings,
+		accounts,
+		sessions,
+		users,
+		oldUsers,
+		verifications,
+		survivalRankings,
+	] = await Promise.all([
 		prisma.serverSetting.findMany({ orderBy: { serverId: "asc" } }),
 		prisma.account.findMany({ orderBy: { id: "asc" } }),
 		prisma.session.findMany({ orderBy: { id: "asc" } }),
@@ -493,7 +505,9 @@ const command = {
 		.addSubcommand((sub) =>
 			sub
 				.setName("db")
-				.setDescription("データベースに保存されている全情報を表示します（ページ分け）"),
+				.setDescription(
+					"データベースに保存されている全情報を表示します（ページ分け）",
+				),
 		)
 		.addSubcommand((sub) =>
 			sub
@@ -623,7 +637,15 @@ const command = {
 
 		// ===== db =====
 		if (sub === "db") {
-			const [serverSettings, accounts, sessions, users, oldUsers, verifications, survivalRankings] = await Promise.all([
+			const [
+				serverSettings,
+				accounts,
+				sessions,
+				users,
+				oldUsers,
+				verifications,
+				survivalRankings,
+			] = await Promise.all([
 				prisma.serverSetting.findMany({ orderBy: { serverId: "asc" } }),
 				prisma.account.findMany({ orderBy: { id: "asc" } }),
 				prisma.session.findMany({ orderBy: { id: "asc" } }),

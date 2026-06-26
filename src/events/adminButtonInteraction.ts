@@ -1,8 +1,4 @@
-import {
-	type ButtonInteraction,
-	Events,
-	type Interaction,
-} from "discord.js";
+import { type ButtonInteraction, Events, type Interaction } from "discord.js";
 import { handleAdminDbButtonInteraction } from "@/commands/admin";
 
 export default {
