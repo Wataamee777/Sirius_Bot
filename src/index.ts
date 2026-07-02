@@ -1,6 +1,7 @@
 import * as fsPromises from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import cors from "cors";
 import {
 	Client,
 	Collection,
@@ -126,6 +127,7 @@ const createClient = () =>
 
 const setupApiRoutes = (client: ExtendedClient, rest: REST) => {
 	const app = express();
+	app.use(cors());
 
 	app.get("/api/guilds", async (req: Request, res: Response) => {
 		void req;
@@ -252,6 +254,181 @@ const setupApiRoutes = (client: ExtendedClient, rest: REST) => {
 				.json({ error: "Failed to fetch commands from Discord" });
 		}
 	});
+
+	app.get(
+		"/api/guilds/:id/metadata",
+		async (req: Request<{ id: string }>, res: Response) => {
+			const guildId = req.params.id;
+			try {
+				if (!client.shard) {
+					const guild = client.guilds.cache.get(guildId);
+					if (!guild) return res.status(404).json({ error: "Guild not found" });
+					return res.json({
+						channels: guild.channels.cache
+							.filter((c) => c.type === 0 || c.type === 5)
+							.map((c) => ({ id: c.id, name: c.name })),
+						roles: guild.roles.cache
+							.filter((r) => r.name !== "@everyone")
+							.map((r) => ({ id: r.id, name: r.name })),
+					});
+				}
+
+				const results = await client.shard.broadcastEval(
+					(c, { targetGuildId }) => {
+						const guild = c.guilds.cache.get(targetGuildId);
+						if (!guild) return null;
+						return {
+							channels: guild.channels.cache
+								.filter((ch) => ch.type === 0 || ch.type === 5)
+								.map((ch) => ({ id: ch.id, name: ch.name })),
+							roles: guild.roles.cache
+								.filter((r) => r.name !== "@everyone")
+								.map((r) => ({ id: r.id, name: r.name })),
+						};
+					},
+					{ context: { targetGuildId: guildId } },
+				);
+
+				const data = results.find((r) => r !== null);
+				if (!data) return res.status(404).json({ error: "Guild not found" });
+				return res.json(data);
+			} catch (err: unknown) {
+				return res.status(500).json({ error: "Internal server error" });
+			}
+		},
+	);
+
+	app.post(
+		"/api/guilds/:id/honeypot-notice",
+		express.json(),
+		async (req: Request<{ id: string }>, res: Response) => {
+			const guildId = req.params.id;
+			const { channelId } = req.body;
+
+			if (!channelId)
+				return res.status(400).json({ error: "Missing channelId" });
+
+			try {
+				const sendNotice = async (c: Client, gId: string, cId: string) => {
+					const guild = c.guilds.cache.get(gId);
+					if (!guild) return false;
+					const channel = await guild.channels.fetch(cId).catch(() => null);
+					if (channel?.isTextBased() && "send" in channel) {
+						await channel.send({
+							content:
+								"⚠️ **ハニーポット設定の更新**\nこのチャンネルにメッセージを送信すると、自動的にBANされるようになりました。ご注意ください。",
+						});
+						return true;
+					}
+					return false;
+				};
+
+				if (!client.shard) {
+					const success = await sendNotice(client, guildId, channelId);
+					return res.json({ success });
+				}
+
+				const results = await client.shard.broadcastEval(
+					async (c, { gId, cId }) => {
+						const guild = c.guilds.cache.get(gId);
+						if (!guild) return false;
+						const channel = await guild.channels.fetch(cId).catch(() => null);
+						if (channel?.isTextBased() && "send" in channel) {
+							await channel.send({
+								content:
+									"⚠️ **ハニーポット設定の更新**\nこのチャンネルにメッセージを送信すると、自動的にBANされるようになりました。ご注意ください。",
+							});
+							return true;
+						}
+						return false;
+					},
+					{ context: { gId: guildId, cId: channelId } },
+				);
+
+				const success = results.some((r) => r === true);
+				return res.json({ success });
+			} catch (err: unknown) {
+				console.error("Honeypot notice error:", err);
+				return res.status(500).json({ error: "Internal server error" });
+			}
+		},
+	);
+
+	// Auto Reaction emoji validation endpoint
+	app.post(
+		"/api/guilds/:id/validate-emoji",
+		express.json(),
+		async (req: Request<{ id: string }>, res: Response) => {
+			const guildId = req.params.id;
+			const { emoji } = req.body;
+
+			if (!emoji) return res.status(400).json({ error: "Missing emoji" });
+
+			try {
+				const validateEmoji = async (
+					c: Client,
+					gId: string,
+					emojiStr: string,
+				) => {
+					const guild = c.guilds.cache.get(gId);
+					if (!guild) return { valid: false, error: "Guild not found" };
+
+					// Check if emoji is a custom emoji (format: :name:)
+					if (emojiStr.startsWith(":") && emojiStr.endsWith(":")) {
+						const emojiName = emojiStr.slice(1, -1);
+						const customEmoji = guild.emojis.cache.find(
+							(e) => e.name === emojiName,
+						);
+						if (!customEmoji) {
+							return {
+								valid: false,
+								error: `Custom emoji ':${emojiName}:' not found in this server`,
+							};
+						}
+						return { valid: true };
+					}
+
+					// Unicode emoji validation (basic check)
+					return { valid: true };
+				};
+
+				if (!client.shard) {
+					const result = await validateEmoji(client, guildId, emoji);
+					return res.json(result);
+				}
+
+				const results = await client.shard.broadcastEval(
+					async (c, { gId, emojiStr }) => {
+						const guild = c.guilds.cache.get(gId);
+						if (!guild) return { valid: false, error: "Guild not found" };
+
+						if (emojiStr.startsWith(":") && emojiStr.endsWith(":")) {
+							const emojiName = emojiStr.slice(1, -1);
+							const customEmoji = guild.emojis.cache.find(
+								(e) => e.name === emojiName,
+							);
+							if (!customEmoji) {
+								return {
+									valid: false,
+									error: `Custom emoji ':${emojiName}:' not found in this server`,
+								};
+							}
+							return { valid: true };
+						}
+
+						return { valid: true };
+					},
+					{ context: { gId: guildId, emojiStr: emoji } },
+				);
+
+				const result = results.find((r) => r !== null);
+				return res.json(result || { valid: false, error: "Guild not found" });
+			} catch (err: unknown) {
+				console.error("Emoji validation error:", err);
+				return res.status(500).json({ error: "Internal server error" });
+			}
+		},
+	);
 
 	app.listen(process.env.PORT || 3000, () => {
 		console.log("Web server started");

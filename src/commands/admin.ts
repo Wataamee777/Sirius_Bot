@@ -1,9 +1,16 @@
 import * as vm from "node:vm";
 import {
+	type ButtonInteraction,
 	type ChatInputCommandInteraction,
+	type Message,
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	ComponentType,
 	EmbedBuilder,
 	SlashCommandBuilder,
 } from "discord.js";
+import prisma from "@/database/db";
 import { ERROR_ICON_URL, SUCCESS_ICON_URL } from "@/utils/embedIcons";
 import { readJsonData, writeJsonData } from "@/utils/jsonFileStore";
 import { updateGlobalPresence } from "@/utils/presence";
@@ -127,6 +134,176 @@ const leaveGuildAcrossShards = async (
 	return (
 		results.find((result): result is LeaveResult => result !== null) ?? null
 	);
+};
+
+const formatDbValue = (value: unknown): string => {
+	if (value instanceof Date) {
+		return value.toISOString();
+	}
+	if (typeof value === "object" && value !== null) {
+		return JSON.stringify(value, (_key, nestedValue) =>
+			nestedValue instanceof Date ? nestedValue.toISOString() : nestedValue,
+		);
+	}
+	return String(value);
+};
+
+type DbModelPage = {
+	name: string;
+	records: unknown[];
+	unavailable?: boolean;
+};
+
+const getUsersRecords = async () => {
+	if (
+		"users" in prisma &&
+		typeof (prisma as any).users?.findMany === "function"
+	) {
+		return (prisma as any).users.findMany({ orderBy: { id: "asc" } });
+	}
+	return [] as unknown[];
+};
+
+const buildDbPages = (models: DbModelPage[]) => {
+	const pages: Array<{ title: string; description: string }> = [];
+	const MAX_DESCRIPTION_LENGTH = 3600;
+
+	for (const model of models) {
+		const header = `${model.name} (${model.records.length})`;
+		if (model.records.length === 0) {
+			pages.push({
+				title: model.name,
+				description: `${header}\n\n${model.unavailable ? `Prisma client does not expose model ${model.name}.` : "なし"}`,
+			});
+			continue;
+		}
+
+		const lines = model.records.map((record, index) => {
+			const serialized = formatDbValue(record);
+			return `#${index + 1} ${serialized}`;
+		});
+
+		let currentLines: string[] = [];
+		let currentLength = header.length + 2;
+
+		for (const line of lines) {
+			const nextLength = currentLength + line.length + 1;
+			if (nextLength > MAX_DESCRIPTION_LENGTH && currentLines.length > 0) {
+				pages.push({
+					title: model.name,
+					description: `${header}\n\n${currentLines.join("\n")}`,
+				});
+				currentLines = [line];
+				currentLength = header.length + 2 + line.length + 1;
+				continue;
+			}
+			currentLines.push(line);
+			currentLength = nextLength;
+		}
+
+		if (currentLines.length > 0) {
+			pages.push({
+				title: model.name,
+				description: `${header}\n\n${currentLines.join("\n")}`,
+			});
+		}
+	}
+
+	return pages;
+};
+
+const createDbEmbed = (
+	page: { title: string; description: string },
+	pageIndex: number,
+	totalPages: number,
+) => {
+	return new EmbedBuilder()
+		.setColor(0x5865f2)
+		.setAuthor({
+			name: `🗄️ DB 登録情報 (${pageIndex + 1}/${totalPages})`,
+			iconURL: SUCCESS_ICON_URL,
+		})
+		.setTitle(page.title)
+		.setDescription(page.description)
+		.setFooter({ text: `Page ${pageIndex + 1}/${totalPages}` });
+};
+
+const createDbPager = (pageIndex: number, totalPages: number) => {
+	const prevButton = new ButtonBuilder()
+		.setCustomId(`admin-db-prev:${pageIndex}`)
+		.setLabel("◀️ 前へ")
+		.setStyle(ButtonStyle.Primary)
+		.setDisabled(pageIndex <= 0);
+
+	const nextButton = new ButtonBuilder()
+		.setCustomId(`admin-db-next:${pageIndex}`)
+		.setLabel("次へ ▶️")
+		.setStyle(ButtonStyle.Primary)
+		.setDisabled(pageIndex >= totalPages - 1);
+
+	return new ActionRowBuilder<ButtonBuilder>().addComponents(
+		prevButton,
+		nextButton,
+	);
+};
+
+export const handleAdminDbButtonInteraction = async (
+	interaction: ButtonInteraction,
+) => {
+	const parts = interaction.customId.split(":");
+	if (parts.length !== 2) {
+		return;
+	}
+
+	const [, pageIndexStr] = parts;
+	const currentPage = Number(pageIndexStr);
+	if (!Number.isFinite(currentPage)) {
+		return;
+	}
+
+	const action = interaction.customId.startsWith("admin-db-prev")
+		? "prev"
+		: interaction.customId.startsWith("admin-db-next")
+			? "next"
+			: null;
+	if (!action) {
+		return;
+	}
+
+	const [
+		serverSettings,
+		accounts,
+		sessions,
+		users,
+		oldUsers,
+		verifications,
+		survivalRankings,
+	] = await Promise.all([
+		prisma.serverSetting.findMany({ orderBy: { serverId: "asc" } }),
+		prisma.account.findMany({ orderBy: { id: "asc" } }),
+		prisma.session.findMany({ orderBy: { id: "asc" } }),
+		prisma.user.findMany({ orderBy: { id: "asc" } }),
+		getUsersRecords(),
+		prisma.verification.findMany({ orderBy: { id: "asc" } }),
+		prisma.survivalRanking.findMany({ orderBy: { userId: "asc" } }),
+	]);
+
+	const pages = buildDbPages([
+		{ name: "ServerSetting", records: serverSettings },
+		{ name: "Account", records: accounts },
+		{ name: "Session", records: sessions },
+		{ name: "User", records: users },
+		{ name: "Users", records: oldUsers, unavailable: !("users" in prisma) },
+		{ name: "Verification", records: verifications },
+		{ name: "SurvivalRanking", records: survivalRankings },
+	]);
+
+	const targetPage = action === "prev" ? currentPage - 1 : currentPage + 1;
+	const pageIndex = Math.max(0, Math.min(targetPage, pages.length - 1));
+	const embed = createDbEmbed(pages[pageIndex], pageIndex, pages.length);
+	const components = [createDbPager(pageIndex, pages.length)];
+
+	await interaction.update({ embeds: [embed], components });
 };
 
 const createGuildInviteAcrossShards = async (
@@ -327,6 +504,13 @@ const command = {
 		)
 		.addSubcommand((sub) =>
 			sub
+				.setName("db")
+				.setDescription(
+					"データベースに保存されている全情報を表示します（ページ分け）",
+				),
+		)
+		.addSubcommand((sub) =>
+			sub
 				.setName("code")
 				.setDescription("JavaScriptコードを実行")
 				.addStringOption((opt) =>
@@ -448,6 +632,51 @@ const command = {
 				})
 				.setDescription(servers || "なし");
 			await sendEphemeral(embed);
+			return;
+		}
+
+		// ===== db =====
+		if (sub === "db") {
+			const [
+				serverSettings,
+				accounts,
+				sessions,
+				users,
+				oldUsers,
+				verifications,
+				survivalRankings,
+			] = await Promise.all([
+				prisma.serverSetting.findMany({ orderBy: { serverId: "asc" } }),
+				prisma.account.findMany({ orderBy: { id: "asc" } }),
+				prisma.session.findMany({ orderBy: { id: "asc" } }),
+				prisma.user.findMany({ orderBy: { id: "asc" } }),
+				getUsersRecords(),
+				prisma.verification.findMany({ orderBy: { id: "asc" } }),
+				prisma.survivalRanking.findMany({ orderBy: { userId: "asc" } }),
+			]);
+
+			const pages = buildDbPages([
+				{ name: "ServerSetting", records: serverSettings },
+				{ name: "Account", records: accounts },
+				{ name: "Session", records: sessions },
+				{ name: "User", records: users },
+				{ name: "Users", records: oldUsers, unavailable: !("users" in prisma) },
+				{ name: "Verification", records: verifications },
+				{ name: "SurvivalRanking", records: survivalRankings },
+			]);
+
+			if (pages.length === 0) {
+				const embed = new EmbedBuilder()
+					.setColor(0x5865f2)
+					.setAuthor({ name: "🗄️ DB 登録情報", iconURL: SUCCESS_ICON_URL })
+					.setDescription("DB にデータがありません。");
+				await sendEphemeral(embed);
+				return;
+			}
+
+			const embed = createDbEmbed(pages[0], 0, pages.length);
+			const components = [createDbPager(0, pages.length)];
+			await interaction.editReply({ embeds: [embed], components });
 			return;
 		}
 
