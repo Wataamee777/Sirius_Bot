@@ -1,9 +1,9 @@
 import {
-	ChatInputCommandInteraction,
+	type ChatInputCommandInteraction,
+	MessageFlags,
+	PermissionFlagsBits,
 	SlashCommandBuilder,
 	VoiceChannel,
-	PermissionFlagsBits,
-	MessageFlags,
 } from "discord.js";
 
 export const data = new SlashCommandBuilder()
