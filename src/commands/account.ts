@@ -1,10 +1,10 @@
 import {
-	type ChatInputCommandInteraction,
-	EmbedBuilder,
-	SlashCommandBuilder,
 	ActionRowBuilder,
 	ButtonBuilder,
 	ButtonStyle,
+	type ChatInputCommandInteraction,
+	EmbedBuilder,
+	SlashCommandBuilder,
 } from "discord.js";
 
 // 変数名を command から data に変更し、直接エクスポート
