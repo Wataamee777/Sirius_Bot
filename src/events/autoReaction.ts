@@ -1,10 +1,9 @@
 import { EmbedBuilder, Events, type Message } from "discord.js";
 import { prisma } from "@/database/db";
-import type { ExtendedClient } from "../types";
 
 export default {
 	name: Events.MessageCreate,
-	async execute(message: Message, client: ExtendedClient) {
+	async execute(message: Message ) {
 		// Bot自身のメッセージは無視
 		if (message.author.bot) return;
 
