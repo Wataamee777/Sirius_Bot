@@ -111,7 +111,7 @@ const command = {
 				.setStyle(ButtonStyle.Link)
 				.setURL("https://siriusbot.f5.si/"),
 		);
-		await sendReply(embed, [row] as const);
+		await sendReply(embed, [row]);
 	},
 };
 export default command;

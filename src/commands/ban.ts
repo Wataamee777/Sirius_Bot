@@ -101,14 +101,6 @@ const command = {
 			await sendReply(embed, true);
 		};
 
-		if (!interaction.deferred && !interaction.replied) {
-			try {
-				await interaction.deferReply();
-			} catch {
-				// If defer fails, continue and attempt a normal reply in sendReply.
-			}
-		}
-
 		const targetUser = interaction.options.getUser("user", true);
 		const reasonInput = interaction.options.getString("reason")?.trim();
 		const guild = interaction.guild;
@@ -189,6 +181,14 @@ const command = {
 					"❌ このユーザーはBANできません。権限設定を確認してください。",
 				);
 				return;
+			}
+		}
+
+		if (!interaction.deferred && !interaction.replied) {
+			try {
+				await interaction.deferReply();
+			} catch {
+				// If defer fails, continue and attempt a normal reply in sendReply.
 			}
 		}
 

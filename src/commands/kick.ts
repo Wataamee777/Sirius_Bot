@@ -21,11 +21,15 @@ const command = {
 			option.setName("reason").setDescription("KICK理由").setRequired(false),
 		),
 	async execute(interaction: ChatInputCommandInteraction) {
-		const sendReply = async (embed: EmbedBuilder) => {
-			const replyPayload = { embeds: [embed] };
+		const sendReply = async (embed: EmbedBuilder, ephemeral = false) => {
+			const replyPayload = {
+				embeds: [embed],
+				...(ephemeral ? { flags: ["Ephemeral"] as const } : {}),
+			};
 			const editPayload = { embeds: [embed] };
 			const followUpPayload = {
 				embeds: [embed],
+				...(ephemeral ? { flags: ["Ephemeral"] as const } : {}),
 			};
 
 			const tryEdit = async () => {
@@ -94,16 +98,8 @@ const command = {
 				.setDescription(content)
 				.setColor(0xed4245)
 				.setTimestamp(new Date());
-			await sendReply(embed);
+			await sendReply(embed, true);
 		};
-
-		if (!interaction.deferred && !interaction.replied) {
-			try {
-				await interaction.deferReply();
-			} catch {
-				// If defer fails, continue and attempt a normal reply in sendReply.
-			}
-		}
 
 		const targetUser = interaction.options.getUser("user", true);
 		const reasonInput = interaction.options.getString("reason")?.trim();
@@ -191,6 +187,14 @@ const command = {
 				"❌ このユーザーはKICKできません。権限設定を確認してください。",
 			);
 			return;
+		}
+
+		if (!interaction.deferred && !interaction.replied) {
+			try {
+				await interaction.deferReply();
+			} catch {
+				// If defer fails, continue and attempt a normal reply in sendReply.
+			}
 		}
 
 		const reason = reasonInput
