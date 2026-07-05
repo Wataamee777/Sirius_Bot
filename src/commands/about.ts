@@ -13,19 +13,17 @@ const command = {
 		.setName("about")
 		.setDescription("Botの情報を表示します"),
 	async execute(interaction: ChatInputCommandInteraction) {
-		const sendEphemeral = async (
+		const sendReply = async (
 			embed: EmbedBuilder,
 			components?: ActionRowBuilder<ButtonBuilder>[],
 		) => {
 			const replyPayload = {
 				embeds: [embed],
-				flags: ["Ephemeral"] as const,
 				components,
 			};
 			const editPayload = { embeds: [embed], components };
 			const followUpPayload = {
 				embeds: [embed],
-				flags: ["Ephemeral"] as const,
 				components,
 			};
 			const tryEdit = async () => {
@@ -83,9 +81,9 @@ const command = {
 
 		if (!interaction.deferred && !interaction.replied) {
 			try {
-				await interaction.deferReply({ flags: ["Ephemeral"] as const });
+				await interaction.deferReply();
 			} catch {
-				// If defer fails, continue and attempt a normal reply in sendEphemeral.
+				// If defer fails, continue and attempt a normal reply in sendReply.
 			}
 		}
 
@@ -113,7 +111,7 @@ const command = {
 				.setStyle(ButtonStyle.Link)
 				.setURL("https://siriusbot.f5.si/"),
 		);
-		await sendEphemeral(embed, [row] as const);
+		await sendReply(embed, [row] as const);
 	},
 };
 export default command;

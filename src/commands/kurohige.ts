@@ -175,7 +175,6 @@ const command = {
 				if (i.user.id === user1.id) {
 					await i.reply({
 						content: "❌ 自分自身と対戦することはできません！",
-						ephemeral: true,
 					});
 					return;
 				}
@@ -351,7 +350,6 @@ async function startGlobalGame(
 		if (clickerId !== activePlayer.id) {
 			await i.reply({
 				content: "❌ あなたのターンではありません！",
-				ephemeral: true,
 			});
 			return;
 		}
@@ -520,7 +518,6 @@ async function startSingleOrGuildGame(
 		if (i.user.id !== activePlayer.id) {
 			await i.reply({
 				content: "❌ あなたのターンではありません！",
-				ephemeral: true,
 			});
 			return;
 		}

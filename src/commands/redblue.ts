@@ -137,7 +137,6 @@ export async function handleRedBlueButtonInteraction(
 		await interaction.reply({
 			content:
 				"❌ これはあなたのゲーム画面ではないか、セッションが既に終了しています。自分で `/redblue` を実行して遊んでね！",
-			ephemeral: true,
 		});
 		return;
 	}

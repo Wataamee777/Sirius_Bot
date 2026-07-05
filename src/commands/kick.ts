@@ -21,12 +21,11 @@ const command = {
 			option.setName("reason").setDescription("KICK理由").setRequired(false),
 		),
 	async execute(interaction: ChatInputCommandInteraction) {
-		const sendEphemeral = async (embed: EmbedBuilder) => {
-			const replyPayload = { embeds: [embed], flags: ["Ephemeral"] as const };
+		const sendReply = async (embed: EmbedBuilder) => {
+			const replyPayload = { embeds: [embed] };
 			const editPayload = { embeds: [embed] };
 			const followUpPayload = {
 				embeds: [embed],
-				flags: ["Ephemeral"] as const,
 			};
 
 			const tryEdit = async () => {
@@ -95,14 +94,14 @@ const command = {
 				.setDescription(content)
 				.setColor(0xed4245)
 				.setTimestamp(new Date());
-			await sendEphemeral(embed);
+			await sendReply(embed);
 		};
 
 		if (!interaction.deferred && !interaction.replied) {
 			try {
-				await interaction.deferReply({ flags: ["Ephemeral"] as const });
+				await interaction.deferReply();
 			} catch {
-				// If defer fails, continue and attempt a normal reply in sendEphemeral.
+				// If defer fails, continue and attempt a normal reply in sendReply.
 			}
 		}
 
@@ -210,7 +209,7 @@ const command = {
 				)
 				.setColor(0x57f287)
 				.setTimestamp(new Date());
-			await sendEphemeral(embed);
+			await sendReply(embed);
 		} catch (error) {
 			if (requestor) {
 				const requesterRolePosition = requestor.roles.highest.position;
