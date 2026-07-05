@@ -702,7 +702,6 @@ const command = {
 			if (button.user.id !== interaction.user.id) {
 				await button.reply({
 					content: "あなたのゲームではありません。",
-					ephemeral: true,
 				});
 				return;
 			}

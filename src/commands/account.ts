@@ -37,7 +37,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 		await interaction.reply({
 			embeds: [successEmbed],
 			components: [row],
-			ephemeral: true,
 		});
 	}
 }

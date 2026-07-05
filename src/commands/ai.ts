@@ -35,12 +35,11 @@ const command = {
 		),
 
 	async execute(interaction: ChatInputCommandInteraction) {
-		const sendEphemeral = async (embed: EmbedBuilder) => {
-			const replyPayload = { embeds: [embed], flags: ["Ephemeral"] as const };
+		const sendReply = async (embed: EmbedBuilder) => {
+			const replyPayload = { embeds: [embed] };
 			const editPayload = { embeds: [embed] };
 			const followUpPayload = {
 				embeds: [embed],
-				flags: ["Ephemeral"] as const,
 			};
 			const tryEdit = async () => {
 				try {
@@ -103,14 +102,14 @@ const command = {
 				.setDescription(content)
 				.setColor(0xed4245)
 				.setTimestamp(new Date());
-			await sendEphemeral(embed);
+			await sendReply(embed);
 		};
 
 		if (!interaction.deferred && !interaction.replied) {
 			try {
-				await interaction.deferReply({ flags: ["Ephemeral"] as const });
+				await interaction.deferReply();
 			} catch {
-				// If defer fails, continue and attempt a normal reply in sendEphemeral.
+				// If defer fails, continue and attempt a normal reply in sendReply.
 			}
 		}
 
@@ -184,7 +183,7 @@ const command = {
 				})
 				.setTimestamp();
 
-			await sendEphemeral(embed);
+			await sendReply(embed);
 		} catch (error) {
 			console.error("AIエラー:", error);
 			await replyError("❌ AIの取得に失敗しました");
