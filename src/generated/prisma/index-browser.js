@@ -139,7 +139,10 @@ exports.Prisma.ServerSettingScalarFieldEnum = {
   honeypotEnabled: 'honeypotEnabled',
   honeypotIgnoreRole: 'honeypotIgnoreRole',
   honeypotReportId: 'honeypotReportId',
-  autoReactions: 'autoReactions'
+  autoReactions: 'autoReactions',
+  earthquakeNotifyEnabled: 'earthquakeNotifyEnabled',
+  earthquakeChannelId: 'earthquakeChannelId',
+  earthquakeWebhookUrl: 'earthquakeWebhookUrl'
 };
 
 exports.Prisma.AccountScalarFieldEnum = {
@@ -178,6 +181,19 @@ exports.Prisma.UserScalarFieldEnum = {
   image: 'image',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
+};
+
+exports.Prisma.UsersScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  image: 'image',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  acceptedPrivacy: 'acceptedPrivacy',
+  acceptedTerms: 'acceptedTerms',
+  birthday: 'birthday',
+  economyRegistered: 'economyRegistered',
+  ipAddress: 'ipAddress'
 };
 
 exports.Prisma.VerificationScalarFieldEnum = {
@@ -220,7 +236,9 @@ exports.Prisma.ServerSettingOrderByRelevanceFieldEnum = {
   honeypotChannelId: 'honeypotChannelId',
   honeypotIgnoreRole: 'honeypotIgnoreRole',
   honeypotReportId: 'honeypotReportId',
-  autoReactions: 'autoReactions'
+  autoReactions: 'autoReactions',
+  earthquakeChannelId: 'earthquakeChannelId',
+  earthquakeWebhookUrl: 'earthquakeWebhookUrl'
 };
 
 exports.Prisma.AccountOrderByRelevanceFieldEnum = {
@@ -250,6 +268,13 @@ exports.Prisma.UserOrderByRelevanceFieldEnum = {
   image: 'image'
 };
 
+exports.Prisma.UsersOrderByRelevanceFieldEnum = {
+  id: 'id',
+  name: 'name',
+  image: 'image',
+  ipAddress: 'ipAddress'
+};
+
 exports.Prisma.VerificationOrderByRelevanceFieldEnum = {
   id: 'id',
   identifier: 'identifier',
@@ -267,6 +292,7 @@ exports.Prisma.ModelName = {
   Account: 'Account',
   Session: 'Session',
   User: 'User',
+  Users: 'Users',
   Verification: 'Verification',
   SurvivalRanking: 'SurvivalRanking'
 };

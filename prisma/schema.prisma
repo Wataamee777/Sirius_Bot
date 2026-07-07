@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -26,6 +27,9 @@ model ServerSetting {
   honeypotIgnoreRole    String?  @db.Text
   honeypotReportId      String?
   autoReactions         String?  @db.Text
+  earthquakeNotifyEnabled Boolean @default(false)
+  earthquakeChannelId   String?
+  earthquakeWebhookUrl  String?  @db.Text
 }
 
 model Account {

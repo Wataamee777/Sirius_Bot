@@ -1,4 +1,4 @@
-import { EmbedBuilder, Events, type Message } from "discord.js";
+import { Events, Message, EmbedBuilder } from "discord.js";
 import { prisma } from "@/database/db";
 
 export default {

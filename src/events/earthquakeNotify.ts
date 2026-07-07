@@ -1,13 +1,13 @@
 import type { APIEmbed, Client } from "discord.js";
 import { EmbedBuilder, Events } from "discord.js";
+import { prisma } from "@/database/db";
+import { sendEarthquakeWebhook } from "@/utils/earthquakeWebhook";
 
-const TARGET_CHANNEL_ID = "1445639739188445420";
 const EARTHQUAKE_API_URL =
 	"https://api.p2pquake.net/v2/history?codes=551&limit=1";
 const EEW_API_URL = "https://api.p2pquake.net/v2/history?codes=556&limit=1";
 const POLL_INTERVAL_MS = 30_000;
-const SEND_TEST_SHAKE_SCALE3_ON_BOOT = true;
-const STARTUP_TEST_DELAY_MS = 20_000;
+const MAX_EVENT_TIME_DIFF_MS = 30_000;
 const JST_TIME_ZONE = "Asia/Tokyo";
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
@@ -67,31 +67,22 @@ type NotificationState = {
 	signature: string | null;
 };
 
-let earthquakeState: NotificationState = {
-	eventKey: null,
-	messageId: null,
-	signature: null,
+type EarthquakeTarget = {
+	serverId: string;
+	webhookUrl: string;
 };
-let eewState: NotificationState = {
-	eventKey: null,
-	messageId: null,
-	signature: null,
-};
+
+const earthquakeStates = new Map<string, NotificationState>();
+const eewStates = new Map<string, NotificationState>();
+
 let polling = false;
 let pollTimer: NodeJS.Timeout | null = null;
 
-const isShardingInProcessError = (error: unknown): boolean => {
-	if (!error || typeof error !== "object") {
-		return false;
-	}
-
-	const candidate = error as { name?: unknown; message?: unknown };
-	return (
-		candidate.name === "DiscordjsError" &&
-		typeof candidate.message === "string" &&
-		candidate.message.includes("Shards are still being spawned")
-	);
-};
+const createEmptyState = (): NotificationState => ({
+	eventKey: null,
+	messageId: null,
+	signature: null,
+});
 
 const toScaleLabel = (scale: number) =>
 	scaleLabelMap[scale] ?? `不明 (${scale})`;
@@ -105,8 +96,6 @@ const toScaleColor = (scale: number) => {
 };
 
 const parseApiTime = (raw: string): Date | null => {
-	// P2Pの時刻はタイムゾーン無しの "YYYY/MM/DD HH:mm:ss" の場合がある。
-	// その場合はJSTとして固定解釈し、実行環境のTZ差分で時刻がずれないようにする。
 	const naiveJstMatch = raw.match(
 		/^(\d{4})[/-](\d{2})[/-](\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/,
 	);
@@ -127,6 +116,15 @@ const parseApiTime = (raw: string): Date | null => {
 
 	const parsed = new Date(raw);
 	return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const isEventTimeFresh = (raw: string): boolean => {
+	const eventDate = parseApiTime(raw);
+	if (!eventDate) {
+		return false;
+	}
+
+	return Math.abs(Date.now() - eventDate.getTime()) <= MAX_EVENT_TIME_DIFF_MS;
 };
 
 const toJst = (raw: string) => {
@@ -386,25 +384,6 @@ const fetchLatestEew = async (): Promise<EewInfo | null> => {
 	}
 };
 
-const buildTestScale3Earthquake = (): EarthquakeInfo => {
-	const time = new Date().toISOString();
-
-	return {
-		eventKey: `test-scale3-${time}`,
-		time,
-		place: "テスト震源",
-		magnitude: 4.8,
-		depth: 20,
-		maxScale: 30,
-		tsunami: tsunamiLabelMap.None,
-		points: [
-			{ name: "東京都", scale: 30 },
-			{ name: "神奈川県", scale: 20 },
-			{ name: "千葉県", scale: 20 },
-		],
-	};
-};
-
 const buildEarthquakeEmbed = (quake: EarthquakeInfo): APIEmbed => {
 	const magnitudeText =
 		typeof quake.magnitude === "number" ? quake.magnitude.toFixed(1) : "不明";
@@ -491,165 +470,123 @@ const buildEewEmbed = (eew: EewInfo): APIEmbed => {
 	return embed.toJSON();
 };
 
-const sendToConfiguredChannel = async (
-	client: Client,
-	channelId: string,
-	embed: APIEmbed,
-	messageId?: string | null,
-): Promise<string | null> => {
-	if (client.shard) {
-		try {
-			const results = await client.shard.broadcastEval(
-				async (c, context) => {
-					const ch = await c.channels
-						.fetch(context.channelId)
-						.catch(() => null);
-					if (!ch?.isTextBased() || !ch.isSendable()) {
-						return null;
-					}
+const loadEarthquakeTargets = async (): Promise<EarthquakeTarget[]> => {
+	const settings = await prisma.serverSetting.findMany({
+		where: {
+			earthquakeNotifyEnabled: true,
+			earthquakeWebhookUrl: { not: null },
+		},
+		select: {
+			serverId: true,
+			earthquakeWebhookUrl: true,
+		},
+	});
 
-					const existingMessage =
-						typeof context.messageId === "string" &&
-						context.messageId.length > 0
-							? await ch.messages.fetch(context.messageId).catch(() => null)
-							: null;
-
-					if (existingMessage) {
-						try {
-							await existingMessage.edit({ embeds: [context.embed] });
-							return existingMessage.id;
-						} catch {
-							const newMessage = await ch.send({ embeds: [context.embed] });
-							return newMessage.id;
-						}
-					}
-
-					const sentMessage = await ch.send({ embeds: [context.embed] });
-					return sentMessage.id;
-				},
-				{ context: { channelId, embed, messageId } },
-			);
-
-			return (
-				results.find(
-					(result): result is string =>
-						typeof result === "string" && result.length > 0,
-				) ?? null
-			);
-		} catch (error) {
-			if (isShardingInProcessError(error)) {
-				console.warn(
-					"⏳ Shard起動中のため地震通知を次回ポーリングで再試行します。",
-				);
-				return null;
-			}
-
-			throw error;
+	return settings.flatMap((setting) => {
+		if (!setting.earthquakeWebhookUrl) {
+			return [];
 		}
-	}
 
-	const channel = await client.channels.fetch(channelId).catch(() => null);
-	if (!channel?.isTextBased() || !channel.isSendable()) {
-		return null;
-	}
-
-	const existingMessage =
-		typeof messageId === "string" && messageId.length > 0
-			? await channel.messages.fetch(messageId).catch(() => null)
-			: null;
-
-	if (existingMessage) {
-		try {
-			await existingMessage.edit({ embeds: [embed] });
-			return existingMessage.id;
-		} catch {
-			const newMessage = await channel.send({ embeds: [embed] });
-			return newMessage.id;
-		}
-	}
-
-	const sentMessage = await channel.send({ embeds: [embed] });
-	return sentMessage.id;
+		return [
+			{
+				serverId: setting.serverId,
+				webhookUrl: setting.earthquakeWebhookUrl,
+			},
+		];
+	});
 };
 
-const pollEarthquake = async (
-	client: Client,
-	options?: { useTestScale3?: boolean },
+const notifyTargets = async (
+	targets: EarthquakeTarget[],
+	embed: APIEmbed,
+	stateMap: Map<string, NotificationState>,
+	eventKey: string,
+	signature: string,
+	logLabel: string,
 ) => {
+	await Promise.all(
+		targets.map(async (target) => {
+			const currentState = stateMap.get(target.serverId) ?? createEmptyState();
+			const isSameEvent = currentState.eventKey === eventKey;
+			const shouldSendOrUpdate =
+				!isSameEvent || currentState.signature !== signature;
+
+			if (!shouldSendOrUpdate) {
+				return;
+			}
+
+			const messageId = await sendEarthquakeWebhook(
+				target.webhookUrl,
+				embed,
+				isSameEvent ? currentState.messageId : null,
+			);
+
+			if (messageId) {
+				stateMap.set(target.serverId, {
+					eventKey,
+					messageId,
+					signature,
+				});
+				console.log(`${logLabel} (${target.serverId})`);
+			}
+		}),
+	);
+};
+
+const pollEarthquake = async (client: Client) => {
+	void client;
+
 	if (polling) {
 		return;
 	}
 
 	polling = true;
 	try {
-		const [quake, eew] = await Promise.all([
-			options?.useTestScale3
-				? Promise.resolve(buildTestScale3Earthquake())
-				: fetchLatestEarthquake(),
+		const [targets, quake, eew] = await Promise.all([
+			loadEarthquakeTargets(),
+			fetchLatestEarthquake(),
 			fetchLatestEew(),
 		]);
 
+		if (targets.length === 0) {
+			return;
+		}
+
 		if (quake) {
-			const embed = buildEarthquakeEmbed(quake);
-			const signature = buildSignature(quake);
-			const isSameEvent = earthquakeState.eventKey === quake.eventKey;
-			const shouldSendOrUpdate =
-				!isSameEvent || earthquakeState.signature !== signature;
-
-			if (shouldSendOrUpdate) {
-				const messageId = await sendToConfiguredChannel(
-					client,
-					TARGET_CHANNEL_ID,
-					embed,
-					isSameEvent ? earthquakeState.messageId : null,
+			if (!isEventTimeFresh(quake.time)) {
+				console.log(
+					`⏭️ 地震情報は発生時刻が30秒以上離れているため通知しません: ${quake.place}`,
 				);
-
-				if (messageId) {
-					earthquakeState = {
-						eventKey: quake.eventKey,
-						messageId,
-						signature,
-					};
-					console.log(
-						`${options?.useTestScale3 ? "🧪 テスト" : isSameEvent ? "📝 更新" : "📨 送信"} 地震通知: ${quake.place} / 最大震度 ${toScaleLabel(quake.maxScale)}`,
-					);
-				} else {
-					console.warn(
-						`⚠️ 地震通知先チャンネルへ送信できませんでした: ${TARGET_CHANNEL_ID}`,
-					);
-				}
+			} else {
+				const embed = buildEarthquakeEmbed(quake);
+				const signature = buildSignature(quake);
+				await notifyTargets(
+					targets,
+					embed,
+					earthquakeStates,
+					quake.eventKey,
+					signature,
+					`📨 地震通知: ${quake.place} / 最大震度 ${toScaleLabel(quake.maxScale)}`,
+				);
 			}
 		}
 
 		if (eew) {
-			const embed = buildEewEmbed(eew);
-			const signature = buildSignature(eew);
-			const isSameEvent = eewState.eventKey === eew.eventKey;
-			const shouldSendOrUpdate =
-				!isSameEvent || eewState.signature !== signature;
-
-			if (shouldSendOrUpdate) {
-				const messageId = await sendToConfiguredChannel(
-					client,
-					TARGET_CHANNEL_ID,
-					embed,
-					isSameEvent ? eewState.messageId : null,
+			if (!isEventTimeFresh(eew.issuedAt)) {
+				console.log(
+					`⏭️ 緊急地震速報は発表時刻が30秒以上離れているため通知しません: ${eew.hypocenterName}`,
 				);
-
-				if (messageId) {
-					eewState = {
-						eventKey: eew.eventKey,
-						messageId,
-						signature,
-					};
-					console.log(
-						`${isSameEvent ? "📝 更新" : "🚨 送信"} 緊急地震速報: ${eew.hypocenterName} / 予測最大震度 ${toForecastScaleLabel(eew.maxForecastScale)}`,
-					);
-				} else {
-					console.warn(
-						`⚠️ 緊急地震速報の通知先チャンネルへ送信できませんでした: ${TARGET_CHANNEL_ID}`,
-					);
-				}
+			} else {
+				const embed = buildEewEmbed(eew);
+				const signature = buildSignature(eew);
+				await notifyTargets(
+					targets,
+					embed,
+					eewStates,
+					eew.eventKey,
+					signature,
+					`🚨 緊急地震速報: ${eew.hypocenterName} / 予測最大震度 ${toForecastScaleLabel(eew.maxForecastScale)}`,
+				);
 			}
 		}
 	} catch (error) {
@@ -668,19 +605,8 @@ export default {
 			return;
 		}
 
-		if (!TARGET_CHANNEL_ID.trim()) {
-			console.warn("⚠️ earthquakeNotify.ts の TARGET_CHANNEL_ID が未設定です。");
-			return;
-		}
-
 		if (pollTimer) {
 			return;
-		}
-
-		if (SEND_TEST_SHAKE_SCALE3_ON_BOOT) {
-			setTimeout(() => {
-				void pollEarthquake(client, { useTestScale3: true });
-			}, STARTUP_TEST_DELAY_MS);
 		}
 
 		setTimeout(() => {
