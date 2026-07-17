@@ -34,7 +34,7 @@ model ServerSetting {
   mentionReadoutEnabled Boolean @default(false)
   mentionReadoutNameOnly Boolean @default(false)
   mentionReadoutVolume  Int     @default(50)
-  reminderRoleId    String?
+  reminderRoleId        String?
 }
 
 model Reminder {
@@ -42,7 +42,7 @@ model Reminder {
   serverId  String
   channelId String
   content   String   @db.Text
-  remindAt DateTime
+  remindAt  DateTime
   createdAt DateTime @default(now())
 
   @@index([remindAt])
