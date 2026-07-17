@@ -34,15 +34,16 @@ model ServerSetting {
   mentionReadoutEnabled Boolean @default(false)
   mentionReadoutNameOnly Boolean @default(false)
   mentionReadoutVolume  Int     @default(50)
-  bumpReminderRoleId    String?
+  reminderRoleId    String?
 }
 
-model BumpReminder {
-  id          String   @id @default(cuid())
-  serverId    String
-  channelId   String
-  remindAt    DateTime
-  createdAt   DateTime @default(now())
+model Reminder {
+  id        String   @id @default(cuid())
+  serverId  String
+  channelId String
+  content   String   @db.Text
+  remindAt DateTime
+  createdAt DateTime @default(now())
 
   @@index([remindAt])
 }
