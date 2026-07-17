@@ -8,9 +8,13 @@ const DICOALL_BOT_ID = "903541413298450462";
 
 function isUpMessage(message: Message) {
 	if (!message.inGuild()) return false;
-	if (!message.author.bot || message.author.id !== DICOALL_BOT_ID) return false;
+	if (!message.author.bot || message.author.id !== DICOALL_BOT_ID) {
+		return false;
+	}
 	if (!message.interactionMetadata) return false;
+
 	const txt = convertToCombinedText(message);
+
 	return (
 		(txt.includes("サーバーがリストの最上段に更新されました！") &&
 			txt.includes("サーバーリストのトップに正常に表示されています。")) ||
@@ -21,12 +25,15 @@ function isUpMessage(message: Message) {
 
 export default {
 	name: Events.MessageCreate,
+
 	async execute(message: Message) {
 		if (!isUpMessage(message)) return;
 
 		await message.reply("UPを検知しました\n1時間後に通知します");
-		scheduleReminder(
-			message.channel,
+
+		await scheduleReminder(
+			message.guild.id,
+			message.channel.id,
 			"前回のDICOALLのUPから1時間が経過しました\n</up:935190259111706754> を再度実行できます",
 			REMINDER_INTERVAL,
 		);
