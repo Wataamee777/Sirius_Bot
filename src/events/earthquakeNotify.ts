@@ -6,8 +6,8 @@ import { sendEarthquakeWebhook } from "@/utils/earthquakeWebhook";
 const EARTHQUAKE_API_URL =
 	"https://api.p2pquake.net/v2/history?codes=551&limit=1";
 const EEW_API_URL = "https://api.p2pquake.net/v2/history?codes=556&limit=1";
-const POLL_INTERVAL_MS = 180_000;
-const MAX_EVENT_TIME_DIFF_MS = 180_000;
+const POLL_INTERVAL_MS = 3600_000;
+const MAX_EVENT_TIME_DIFF_MS = 3600_000;
 const JST_TIME_ZONE = "Asia/Tokyo";
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
@@ -555,7 +555,7 @@ const pollEarthquake = async (client: Client) => {
 		if (quake) {
 			if (!isEventTimeFresh(quake.time)) {
 				console.log(
-					`⏭️ 地震情報は発生時刻が3分以上離れているため通知しません: ${quake.place}`,
+					`⏭️ 地震情報は発生時刻60分以上離れているため通知しません: ${quake.place}`,
 				);
 			} else {
 				const embed = buildEarthquakeEmbed(quake);
@@ -574,7 +574,7 @@ const pollEarthquake = async (client: Client) => {
 		if (eew) {
 			if (!isEventTimeFresh(eew.issuedAt)) {
 				console.log(
-					`⏭️ 緊急地震速報は発表時刻が3分以上離れているため通知しません: ${eew.hypocenterName}`,
+					`⏭️ 緊急地震速報は発表時刻60分以上離れているため通知しません: ${eew.hypocenterName}`,
 				);
 			} else {
 				const embed = buildEewEmbed(eew);
