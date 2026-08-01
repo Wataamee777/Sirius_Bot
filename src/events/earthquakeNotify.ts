@@ -6,8 +6,8 @@ import { sendEarthquakeWebhook } from "@/utils/earthquakeWebhook";
 const EARTHQUAKE_API_URL =
 	"https://api.p2pquake.net/v2/history?codes=551&limit=1";
 const EEW_API_URL = "https://api.p2pquake.net/v2/history?codes=556&limit=1";
-const POLL_INTERVAL_MS = 30_000;
-const MAX_EVENT_TIME_DIFF_MS = 30_000;
+const POLL_INTERVAL_MS = 180_000;
+const MAX_EVENT_TIME_DIFF_MS = 180_000;
 const JST_TIME_ZONE = "Asia/Tokyo";
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
