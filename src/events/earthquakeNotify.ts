@@ -555,7 +555,7 @@ const pollEarthquake = async (client: Client) => {
 		if (quake) {
 			if (!isEventTimeFresh(quake.time)) {
 				console.log(
-					`⏭️ 地震情報は発生時刻が30秒以上離れているため通知しません: ${quake.place}`,
+					`⏭️ 地震情報は発生時刻が3分以上離れているため通知しません: ${quake.place}`,
 				);
 			} else {
 				const embed = buildEarthquakeEmbed(quake);
@@ -574,7 +574,7 @@ const pollEarthquake = async (client: Client) => {
 		if (eew) {
 			if (!isEventTimeFresh(eew.issuedAt)) {
 				console.log(
-					`⏭️ 緊急地震速報は発表時刻が30秒以上離れているため通知しません: ${eew.hypocenterName}`,
+					`⏭️ 緊急地震速報は発表時刻が3分以上離れているため通知しません: ${eew.hypocenterName}`,
 				);
 			} else {
 				const embed = buildEewEmbed(eew);
