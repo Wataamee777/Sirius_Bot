@@ -517,9 +517,15 @@ const notifyTargets = async (
 	eventKey: string,
 	signature: string,
 	logLabel: string,
+	invalidatedServerIds?: Set<string>,
 ) => {
 	await Promise.all(
 		targets.map(async (target) => {
+			// Skip targets that have been invalidated during this polling pass
+			if (invalidatedServerIds?.has(target.serverId)) {
+				return;
+			}
+
 			const currentState = stateMap.get(target.serverId) ?? createEmptyState();
 			const isSameEvent = currentState.eventKey === eventKey;
 			const shouldSendOrUpdate =
@@ -541,6 +547,7 @@ const notifyTargets = async (
 					data: { earthquakeWebhookUrl: null },
 				});
 				stateMap.delete(target.serverId);
+				invalidatedServerIds?.add(target.serverId);
 				await notifyGuildOwner(
 					client,
 					target.serverId,
@@ -582,6 +589,10 @@ const pollEarthquake = async (client: Client) => {
 			return;
 		}
 
+		// Track serverIds invalidated during this polling pass to prevent
+		// duplicate owner notifications and re-sending to deleted webhooks
+		const invalidatedServerIds = new Set<string>();
+
 		if (quake) {
 			if (!isEventTimeFresh(quake.time)) {
 				console.log(
@@ -598,6 +609,7 @@ const pollEarthquake = async (client: Client) => {
 					quake.eventKey,
 					signature,
 					`📨 地震通知: ${quake.place} / 最大震度 ${toScaleLabel(quake.maxScale)}`,
+					invalidatedServerIds,
 				);
 			}
 		}
@@ -618,6 +630,7 @@ const pollEarthquake = async (client: Client) => {
 					eew.eventKey,
 					signature,
 					`🚨 緊急地震速報: ${eew.hypocenterName} / 予測最大震度 ${toForecastScaleLabel(eew.maxForecastScale)}`,
+					invalidatedServerIds,
 				);
 			}
 		}

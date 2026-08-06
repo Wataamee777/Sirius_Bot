@@ -113,5 +113,6 @@
 		"skipLibCheck": false /* Skip type checking all .d.ts files. */,
 		"allowSyntheticDefaultImports": true
 	},
-	"include": ["src/**/*"]
+	"include": ["src/**/*"],
+	"exclude": ["src/**/__tests__/**"]
 }
