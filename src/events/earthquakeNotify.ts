@@ -75,6 +75,19 @@ type EarthquakeTarget = {
 const earthquakeStates = new Map<string, NotificationState>();
 const eewStates = new Map<string, NotificationState>();
 
+const notifyGuildOwner = async (
+	client: Client,
+	serverId: string,
+	content: string,
+) => {
+	const guild =
+		client.guilds.cache.get(serverId) ??
+		(await client.guilds.fetch(serverId).catch(() => null));
+	const owner = await guild?.fetchOwner().catch(() => null);
+
+	await owner?.send(content).catch(() => {});
+};
+
 let polling = false;
 let pollTimer: NodeJS.Timeout | null = null;
 
@@ -497,6 +510,7 @@ const loadEarthquakeTargets = async (): Promise<EarthquakeTarget[]> => {
 };
 
 const notifyTargets = async (
+	client: Client,
 	targets: EarthquakeTarget[],
 	embed: APIEmbed,
 	stateMap: Map<string, NotificationState>,
@@ -515,11 +529,27 @@ const notifyTargets = async (
 				return;
 			}
 
-			const messageId = await sendEarthquakeWebhook(
+			const result = await sendEarthquakeWebhook(
 				target.webhookUrl,
 				embed,
 				isSameEvent ? currentState.messageId : null,
 			);
+
+			if (result.missingWebhook) {
+				await prisma.serverSetting.update({
+					where: { serverId: target.serverId },
+					data: { earthquakeWebhookUrl: null },
+				});
+				stateMap.delete(target.serverId);
+				await notifyGuildOwner(
+					client,
+					target.serverId,
+					"Sirius の地震速報送信用 Webhook が見つからなかったため、DB に保存されていた Webhook URL を削除しました。地震速報を再開するには、管理画面から通知チャンネルを設定し直してください。",
+				);
+				return;
+			}
+
+			const messageId = result.messageId;
 
 			if (messageId) {
 				stateMap.set(target.serverId, {
@@ -561,6 +591,7 @@ const pollEarthquake = async (client: Client) => {
 				const embed = buildEarthquakeEmbed(quake);
 				const signature = buildSignature(quake);
 				await notifyTargets(
+					client,
 					targets,
 					embed,
 					earthquakeStates,
@@ -580,6 +611,7 @@ const pollEarthquake = async (client: Client) => {
 				const embed = buildEewEmbed(eew);
 				const signature = buildSignature(eew);
 				await notifyTargets(
+					client,
 					targets,
 					embed,
 					eewStates,
