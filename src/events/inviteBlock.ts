@@ -7,7 +7,7 @@ import {
 import { prisma } from "@/database/db";
 
 const INVITE_REGEX =
-	/(https?:\/\/)?(www\.)?(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9]+/g;
+	/(https?:\/\/)?(www\.)?(discord\.(gg|io|me|li)|discordapp\.com\/invite)\/[a-zA-Z0-9]+(?!\?event=)/g;
 
 export default {
 	name: Events.MessageCreate,
