@@ -6,8 +6,8 @@ import { sendEarthquakeWebhook } from "@/utils/earthquakeWebhook";
 const EARTHQUAKE_API_URL =
 	"https://api.p2pquake.net/v2/history?codes=551&limit=1";
 const EEW_API_URL = "https://api.p2pquake.net/v2/history?codes=556&limit=1";
-const POLL_INTERVAL_MS = 30_000;
-const MAX_EVENT_TIME_DIFF_MS = 30_000;
+const POLL_INTERVAL_MS = 3600_000;
+const MAX_EVENT_TIME_DIFF_MS = 3600_000;
 const JST_TIME_ZONE = "Asia/Tokyo";
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
@@ -74,6 +74,19 @@ type EarthquakeTarget = {
 
 const earthquakeStates = new Map<string, NotificationState>();
 const eewStates = new Map<string, NotificationState>();
+
+const notifyGuildOwner = async (
+	client: Client,
+	serverId: string,
+	content: string,
+) => {
+	const guild =
+		client.guilds.cache.get(serverId) ??
+		(await client.guilds.fetch(serverId).catch(() => null));
+	const owner = await guild?.fetchOwner().catch(() => null);
+
+	await owner?.send(content).catch(() => {});
+};
 
 let polling = false;
 let pollTimer: NodeJS.Timeout | null = null;
@@ -497,15 +510,22 @@ const loadEarthquakeTargets = async (): Promise<EarthquakeTarget[]> => {
 };
 
 const notifyTargets = async (
+	client: Client,
 	targets: EarthquakeTarget[],
 	embed: APIEmbed,
 	stateMap: Map<string, NotificationState>,
 	eventKey: string,
 	signature: string,
 	logLabel: string,
+	invalidatedServerIds?: Set<string>,
 ) => {
 	await Promise.all(
 		targets.map(async (target) => {
+			// Skip targets that have been invalidated during this polling pass
+			if (invalidatedServerIds?.has(target.serverId)) {
+				return;
+			}
+
 			const currentState = stateMap.get(target.serverId) ?? createEmptyState();
 			const isSameEvent = currentState.eventKey === eventKey;
 			const shouldSendOrUpdate =
@@ -515,11 +535,28 @@ const notifyTargets = async (
 				return;
 			}
 
-			const messageId = await sendEarthquakeWebhook(
+			const result = await sendEarthquakeWebhook(
 				target.webhookUrl,
 				embed,
 				isSameEvent ? currentState.messageId : null,
 			);
+
+			if (result.missingWebhook) {
+				await prisma.serverSetting.update({
+					where: { serverId: target.serverId },
+					data: { earthquakeWebhookUrl: null },
+				});
+				stateMap.delete(target.serverId);
+				invalidatedServerIds?.add(target.serverId);
+				await notifyGuildOwner(
+					client,
+					target.serverId,
+					"Sirius の地震速報送信用 Webhook が見つからなかったため、DB に保存されていた Webhook URL を削除しました。地震速報を再開するには、管理画面から通知チャンネルを設定し直してください。",
+				);
+				return;
+			}
+
+			const messageId = result.messageId;
 
 			if (messageId) {
 				stateMap.set(target.serverId, {
@@ -552,21 +589,27 @@ const pollEarthquake = async (client: Client) => {
 			return;
 		}
 
+		// Track serverIds invalidated during this polling pass to prevent
+		// duplicate owner notifications and re-sending to deleted webhooks
+		const invalidatedServerIds = new Set<string>();
+
 		if (quake) {
 			if (!isEventTimeFresh(quake.time)) {
 				console.log(
-					`⏭️ 地震情報は発生時刻が30秒以上離れているため通知しません: ${quake.place}`,
+					`⏭️ 地震情報は発生時刻60分以上離れているため通知しません: ${quake.place}`,
 				);
 			} else {
 				const embed = buildEarthquakeEmbed(quake);
 				const signature = buildSignature(quake);
 				await notifyTargets(
+					client,
 					targets,
 					embed,
 					earthquakeStates,
 					quake.eventKey,
 					signature,
 					`📨 地震通知: ${quake.place} / 最大震度 ${toScaleLabel(quake.maxScale)}`,
+					invalidatedServerIds,
 				);
 			}
 		}
@@ -574,18 +617,20 @@ const pollEarthquake = async (client: Client) => {
 		if (eew) {
 			if (!isEventTimeFresh(eew.issuedAt)) {
 				console.log(
-					`⏭️ 緊急地震速報は発表時刻が30秒以上離れているため通知しません: ${eew.hypocenterName}`,
+					`⏭️ 緊急地震速報は発表時刻60分以上離れているため通知しません: ${eew.hypocenterName}`,
 				);
 			} else {
 				const embed = buildEewEmbed(eew);
 				const signature = buildSignature(eew);
 				await notifyTargets(
+					client,
 					targets,
 					embed,
 					eewStates,
 					eew.eventKey,
 					signature,
 					`🚨 緊急地震速報: ${eew.hypocenterName} / 予測最大震度 ${toForecastScaleLabel(eew.maxForecastScale)}`,
+					invalidatedServerIds,
 				);
 			}
 		}
