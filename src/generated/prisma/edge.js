@@ -39,12 +39,12 @@ exports.Prisma = Prisma
 exports.$Enums = {}
 
 /**
- * Prisma Client JS version: 7.8.0
- * Query Engine version: 3c6e192761c0362d496ed980de936e2f3cebcd3a
+ * Prisma Client JS version: 7.9.1
+ * Query Engine version: e922089b7d7502aff4249d5da3420f6fa55fc6ad
  */
 Prisma.prismaVersion = {
-  client: "7.8.0",
-  engine: "3c6e192761c0362d496ed980de936e2f3cebcd3a"
+  client: "7.9.1",
+  engine: "e922089b7d7502aff4249d5da3420f6fa55fc6ad"
 }
 
 Prisma.PrismaClientKnownRequestError = PrismaClientKnownRequestError;
@@ -273,8 +273,8 @@ exports.Prisma.ModelName = {
  */
 const config = {
   "previewFeatures": [],
-  "clientVersion": "7.8.0",
-  "engineVersion": "3c6e192761c0362d496ed980de936e2f3cebcd3a",
+  "clientVersion": "7.9.1",
+  "engineVersion": "e922089b7d7502aff4249d5da3420f6fa55fc6ad",
   "activeProvider": "mysql",
   "inlineSchema": "generator client {\n  provider = \"prisma-client-js\"\n  output   = \"../src/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"mysql\"\n}\n\nmodel ServerSetting {\n  id                      String   @id @default(cuid())\n  serverId                String   @unique\n  spamBlockEnabled        Boolean  @default(true)\n  inviteBlockEnabled      Boolean  @default(true)\n  spamReportChannelId     String?\n  inviteReportChannelId   String?\n  createdAt               DateTime @default(now())\n  updatedAt               DateTime @updatedAt\n  ignoredChannels         String?  @db.Text\n  ignoredRoles            String?  @db.Text\n  spamIgnoredRoles        String?  @db.Text\n  spamIgnoredChannels     String?  @db.Text\n  inviteIgnoredRoles      String?  @db.Text\n  inviteIgnoredChannels   String?  @db.Text\n  honeypotChannelId       String?\n  honeypotEnabled         Boolean  @default(false)\n  honeypotIgnoreRole      String?  @db.Text\n  honeypotReportId        String?\n  autoReactions           String?  @db.Text\n  earthquakeNotifyEnabled Boolean  @default(false)\n  earthquakeChannelId     String?\n  earthquakeWebhookUrl    String?  @db.Text\n}\n\nmodel Account {\n  id                    String    @id @default(cuid()) @db.VarChar(255)\n  userId                String    @db.VarChar(255)\n  providerId            String    @db.VarChar(255)\n  accountId             String    @db.VarChar(255)\n  accessToken           String?   @db.Text\n  refreshToken          String?   @db.Text\n  expiresAt             DateTime? @db.DateTime(0)\n  password              String?   @db.Text\n  createdAt             DateTime  @default(now())\n  updatedAt             DateTime  @updatedAt\n  idToken               String?   @db.Text\n  accessTokenExpiresAt  DateTime?\n  refreshTokenExpiresAt DateTime?\n  scope                 String?   @db.Text\n  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@index([userId], map: \"account_userId_fkey\")\n  @@map(\"account\")\n}\n\nmodel Session {\n  id        String   @id @default(cuid()) @db.VarChar(255)\n  userId    String   @db.VarChar(255)\n  token     String   @unique @db.VarChar(255)\n  expiresAt DateTime\n  ipAddress String?  @db.VarChar(255)\n  userAgent String?  @db.VarChar(255)\n  createdAt DateTime @default(now())\n  updatedAt DateTime @updatedAt\n  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)\n\n  @@index([userId], map: \"session_userId_fkey\")\n  @@map(\"session\")\n}\n\nmodel User {\n  id            String    @id @default(cuid()) @db.VarChar(255)\n  name          String    @db.VarChar(255)\n  email         String    @unique @db.VarChar(255)\n  emailVerified Boolean\n  image         String?   @db.VarChar(255)\n  createdAt     DateTime  @default(now())\n  updatedAt     DateTime  @updatedAt\n  accounts      Account[]\n  sessions      Session[]\n\n  @@map(\"user\")\n}\n\nmodel Users {\n  id                String    @id @default(cuid()) @db.VarChar(255)\n  name              String    @db.VarChar(255)\n  image             String?   @db.VarChar(255)\n  createdAt         DateTime  @default(now())\n  updatedAt         DateTime  @default(now())\n  acceptedPrivacy   Boolean   @default(false)\n  acceptedTerms     Boolean   @default(false)\n  birthday          DateTime?\n  economyRegistered Boolean   @default(false)\n  ipAddress         String?   @db.VarChar(255)\n\n  @@map(\"users\")\n}\n\nmodel Verification {\n  id         String    @id @default(cuid()) @db.VarChar(255)\n  identifier String    @db.VarChar(255)\n  value      String    @db.Text\n  expiresAt  DateTime\n  createdAt  DateTime?\n  updatedAt  DateTime? @updatedAt\n\n  @@map(\"verification\")\n}\n\nmodel SurvivalRanking {\n  userId    String   @id\n  username  String\n  bestDays  Int      @default(0)\n  updatedAt DateTime\n}\n"
 }

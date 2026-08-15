@@ -45,7 +45,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 	}
 
 	if (subcommand === "info") {
-		await interaction.deferReply();
+		await interaction.deferReply({ flags: ["Ephemeral"] as const });
 
 		const account = await prisma.economyAccount.findUnique({
 			where: {
@@ -99,7 +99,4 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 		return;
 	}
-}
-function deferRelpy() {
-	throw new Error("Function not implemented.");
 }
