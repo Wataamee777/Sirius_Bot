@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -8,28 +7,43 @@ datasource db {
 }
 
 model ServerSetting {
-  id                    String   @id @default(cuid())
-  serverId              String   @unique
-  spamBlockEnabled      Boolean  @default(true)
-  inviteBlockEnabled    Boolean  @default(true)
-  spamReportChannelId   String?
-  inviteReportChannelId String?
-  createdAt             DateTime @default(now())
-  updatedAt             DateTime @updatedAt
-  ignoredChannels       String?  @db.Text
-  ignoredRoles          String?  @db.Text
-  spamIgnoredRoles      String?  @db.Text
-  spamIgnoredChannels   String?  @db.Text
-  inviteIgnoredRoles    String?  @db.Text
-  inviteIgnoredChannels String?  @db.Text
-  honeypotChannelId     String?
-  honeypotEnabled       Boolean  @default(false)
-  honeypotIgnoreRole    String?  @db.Text
-  honeypotReportId      String?
-  autoReactions         String?  @db.Text
-  earthquakeNotifyEnabled Boolean @default(false)
-  earthquakeChannelId   String?
-  earthquakeWebhookUrl  String?  @db.Text
+  id                           String   @id @default(cuid())
+  serverId                     String   @unique
+  spamBlockEnabled             Boolean  @default(true)
+  inviteBlockEnabled           Boolean  @default(true)
+  shortBlockEnabled            Boolean  @default(true)
+  regexBlockEnabled            Boolean  @default(false)
+  spamReportChannelId          String?
+  inviteReportChannelId        String?
+  shortReportChannelId         String?
+  regexReportChannelId         String?
+  createdAt                    DateTime @default(now())
+  updatedAt                    DateTime @updatedAt
+  ignoredChannels              String?  @db.Text
+  ignoredRoles                 String?  @db.Text
+  spamIgnoredRoles             String?  @db.Text
+  spamIgnoredChannels          String?  @db.Text
+  inviteIgnoredRoles           String?  @db.Text
+  inviteIgnoredChannels        String?  @db.Text
+  shortIgnoredRoles            String?  @db.Text
+  shortIgnoredChannels         String?  @db.Text
+  regexIgnoredRoles            String?  @db.Text
+  regexIgnoredChannels         String?  @db.Text
+  honeypotChannelId            String?
+  honeypotEnabled              Boolean  @default(false)
+  honeypotIgnoreRole           String?  @db.Text
+  honeypotReportId             String?
+  autoReactions                String?  @db.Text
+  earthquakeNotifyEnabled      Boolean  @default(false)
+  earthquakeNotifyRole         String?  @db.Text
+  earthquakeChannelId          String?
+  earthquakeWebhookUrl         String?  @db.Text
+  earthquakeNotifyScale        Int?
+  joinLeaveNotificationEnabled Boolean  @default(false)
+  mentionReadoutEnabled        Boolean  @default(false)
+  mentionReadoutNameOnly       Boolean  @default(false)
+  mentionReadoutVolume         Int      @default(50)
+  regexPatterns                String?
 }
 
 model Account {
@@ -47,9 +61,9 @@ model Account {
   accessTokenExpiresAt  DateTime?
   refreshTokenExpiresAt DateTime?
   scope                 String?   @db.Text
-  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId], map: "account_userId_fkey")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("account")
 }
 
@@ -62,9 +76,9 @@ model Session {
   userAgent String?  @db.VarChar(255)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId], map: "session_userId_fkey")
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@map("session")
 }
 
@@ -80,21 +94,6 @@ model User {
   sessions      Session[]
 
   @@map("user")
-}
-
-model Users {
-  id                String    @id @default(cuid()) @db.VarChar(255)
-  name              String    @db.VarChar(255)
-  image             String?   @db.VarChar(255)
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @default(now())
-  acceptedPrivacy   Boolean   @default(false)
-  acceptedTerms     Boolean   @default(false)
-  birthday          DateTime?
-  economyRegistered Boolean   @default(false)
-  ipAddress         String?   @db.VarChar(255)
-
-  @@map("users")
 }
 
 model Verification {
@@ -113,4 +112,87 @@ model SurvivalRanking {
   username  String
   bestDays  Int      @default(0)
   updatedAt DateTime
+}
+
+model EconomyAffiliation {
+  id          String           @id @default(cuid()) @db.VarChar(191)
+  name        String           @db.VarChar(100)
+  description String?          @db.Text
+  enabled     Boolean          @default(true)
+  sortOrder   Int              @default(0)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  accounts    EconomyAccount[]
+
+  @@map("economy_affiliation")
+}
+
+model EconomyAccount {
+  id                    String              @id @default(cuid()) @db.VarChar(255)
+  discordId             String              @unique @db.VarChar(255)
+  name                  String              @db.VarChar(255)
+  image                 String?             @db.VarChar(255)
+  affiliationName       String              @default("未所属") @db.VarChar(255)
+  affiliationId         String?             @db.VarChar(255)
+  coins                 BigInt              @default(0)
+  intelligenceLevel     Int                 @default(0)
+  satiation             Int                 @default(80)
+  happiness             Int                 @default(70)
+  birthday              DateTime?
+  lastWorkAt            DateTime?
+  inventory             String?             @db.Text
+  lastBirthdayBonusYear Int?
+  lastSchoolAt          DateTime?
+  schoolAttendanceCount Int                 @default(0)
+  status                String              @default("健康")
+  ipAddress             String?             @db.VarChar(255)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  affiliation           EconomyAffiliation? @relation(fields: [affiliationId], references: [id], onDelete: SetNull)
+  economyLogs           EconomyLog[]
+  raceHistories         RaceHistory[]
+
+  @@index([affiliationId])
+  @@map("economy_account")
+}
+
+model EconomyLog {
+  id            String        @id @default(cuid()) @db.VarChar(255)
+  discordId     String        @db.VarChar(255)
+  accountId     String?       @db.VarChar(255)
+  eventType     String        @db.VarChar(50)
+  amount        BigInt        @default(0)
+  balanceBefore BigInt        @default(0)
+  balanceAfter  BigInt        @default(0)
+  description   String?       @db.Text
+  metadata      String?       @db.Text
+  createdAt     DateTime      @default(now())
+  economyAccount EconomyAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
+
+  @@index([discordId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("economy_log")
+}
+
+model RaceHistory {
+  id                 String          @id @default(cuid()) @db.VarChar(255)
+  discordId          String          @db.VarChar(255)
+  selectedHorseIndex Int
+  selectedHorseName  String          @db.VarChar(255)
+  betType            String          @db.VarChar(10) // "win" or "place"
+  betAmount          BigInt
+  odds               Decimal         @db.Decimal(10, 2)
+  isHit              Boolean
+  payout             BigInt
+  balanceBefore      BigInt
+  balanceAfter       BigInt
+  raceResult         String?         @db.Text // JSON形式でレース着順を保存
+  createdAt          DateTime        @default(now())
+  economyAccount     EconomyAccount? @relation(fields: [economyAccountId], references: [id])
+  economyAccountId   String?         @db.VarChar(255)
+
+  @@index([discordId])
+  @@index([createdAt])
+  @@map("race_history")
 }
