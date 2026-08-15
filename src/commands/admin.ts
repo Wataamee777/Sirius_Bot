@@ -5,9 +5,7 @@ import {
 	type ButtonInteraction,
 	ButtonStyle,
 	type ChatInputCommandInteraction,
-	ComponentType,
 	EmbedBuilder,
-	type Message,
 	SlashCommandBuilder,
 } from "discord.js";
 import prisma from "@/database/db";
