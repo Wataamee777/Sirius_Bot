@@ -6,20 +6,16 @@ import {
 	EmbedBuilder,
 	SlashCommandBuilder,
 } from "discord.js";
-import { prisma } from "/src/database/db";
+import { prisma } from "../database/db";
 
 export const data = new SlashCommandBuilder()
 	.setName("account")
 	.setDescription("経済アカウントについての情報を表示します")
 	.addSubcommand((sub) =>
-		sub
-			.setName("register")
-			.setDescription("経済アカウントを登録します"),
+		sub.setName("register").setDescription("経済アカウントを登録します"),
 	)
 	.addSubcommand((sub) =>
-		sub
-			.setName("info")
-			.setDescription("経済アカウントの詳細を表示します"),
+		sub.setName("info").setDescription("経済アカウントの詳細を表示します"),
 	);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
@@ -49,8 +45,8 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 	}
 
 	if (subcommand === "info") {
-		await interaction.deferRelpy();
-		
+		await interaction.deferReply();
+
 		const account = await prisma.economyAccount.findUnique({
 			where: {
 				discordId: interaction.user.id,
@@ -67,7 +63,6 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 			await interaction.editReply({
 				embeds: [notFoundEmbed],
-				ephemeral: true,
 			});
 
 			return;
@@ -92,9 +87,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 			.setColor("Green")
 			.setTitle("アカウント情報")
 			.setDescription(Descinfo)
-			.setThumbnail(
-				account.image ?? interaction.user.displayAvatarURL(),
-			)
+			.setThumbnail(account.image ?? interaction.user.displayAvatarURL())
 			.setFooter({
 				text: `Discord ID: ${account.discordId}`,
 			})
@@ -106,4 +99,7 @@ export async function execute(interaction: ChatInputCommandInteraction) {
 
 		return;
 	}
+}
+function deferRelpy() {
+	throw new Error("Function not implemented.");
 }
