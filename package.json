@@ -27,7 +27,8 @@
 		"mysql2": "^3.20.0",
 		"node-fetch": "^3.3.2",
 		"tsx": "^4.21.0",
-		"tweetnacl": "^1.0.3"
+		"tweetnacl": "^1.0.3",
+		"undici": "^6.24.1"
 	},
 	"overrides": {
 		"undici": "^6.24.0"
