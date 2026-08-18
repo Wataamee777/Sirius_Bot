@@ -526,9 +526,12 @@ const setupApiRoutes = (client: ExtendedClient, rest: REST) => {
 		},
 	);
 
-	app.listen(process.env.PORT || 3000, () => {
-		console.log("Web server started");
-	});
+	console.log("⏳ Web server will start in 20 seconds...");
+	setTimeout(() => {
+		app.listen(process.env.PORT || 3000, () => {
+			console.log("Web server started");
+		});
+	}, 20_000);
 };
 
 async function loadCommands(client: ExtendedClient) {
