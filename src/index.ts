@@ -2,7 +2,7 @@ import * as fsPromises from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import cors from "cors";
-import { ProxyAgent } from "undici";
+import { setGlobalDispatcher, ProxyAgent } from "undici";
 import {
 	Client,
 	Collection,
@@ -20,7 +20,7 @@ import { ensureJsonDataDir } from "@/utils/jsonFileStore";
 dotenv.config();
 initErrorReporting();
 
-const PROXY_URL = process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY;
+const PROXY_URL = process.env.https_proxy ?? process.env.http_proxy;
 
 const token = process.env.DISCORD_BOT_TOKEN ?? "";
 
@@ -37,7 +37,10 @@ if (!applicationId) {
 const SHARD_LIST = [0] as const;
 const TOTAL_SHARDS = SHARD_LIST.length;
 
-const proxyAgent = PROXY_URL ? new ProxyAgent(PROXY_URL) : undefined;
+const proxyAgent = PROXY_URL ? new ProxyAgent(PROXY_URL) : undefined
+if (proxyAgent) {
+	setGlobalDispatcher(proxyAgent);
+}
 /* ======================
    コマンド型
 ====================== */
