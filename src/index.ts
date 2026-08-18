@@ -1,3 +1,7 @@
+import { bootstrap } from 'global-agent';
+const PROXY_URL = process.env.https_proxy ?? process.env.http_proxy;
+process.env.GLOBAL_AGENT_HTTP_PROXY = PROXY_URL;
+bootstrap();
 import * as fsPromises from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -20,8 +24,6 @@ import { ensureJsonDataDir } from "@/utils/jsonFileStore";
 dotenv.config();
 initErrorReporting();
 
-const PROXY_URL = process.env.https_proxy ?? process.env.http_proxy;
-
 const token = process.env.DISCORD_BOT_TOKEN ?? "";
 
 if (!token) {
@@ -37,9 +39,10 @@ if (!applicationId) {
 const SHARD_LIST = [0] as const;
 const TOTAL_SHARDS = SHARD_LIST.length;
 
-const proxyAgent = PROXY_URL ? new ProxyAgent(PROXY_URL) : undefined
-if (proxyAgent) {
-	setGlobalDispatcher(proxyAgent);
+let restProxyAgent: ProxyAgent | undefined;
+if (PROXY_URL) {
+	restProxyAgent = new ProxyAgent(PROXY_URL);
+	setGlobalDispatcher(restProxyAgent);
 }
 /* ======================
    コマンド型
@@ -122,7 +125,7 @@ const parseCurrentShardId = () => {
 const createClient = () =>
 	new ExtendedClient({
 		rest: {
-			agent: proxyAgent,
+			agent: restProxyAgent,
 		},
 		intents: [
 			GatewayIntentBits.Guilds,
