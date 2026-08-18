@@ -6,9 +6,9 @@
 	"private": true,
 	"main": "index.ts",
 	"scripts": {
-		"dev": "npx tsx --tsconfig ./tsconfig.json src/index.ts",
-		"build": "npx prisma generate && npx tsc",
-		"start": "node dist/index.js",
+		"dev": "tsx src/index.ts",
+		"build": "npx prisma generate && npx tsc --noEmit",
+		"start": "tsx src/index.ts",
 		"lint": "biome check . --fix",
 		"format": "biome format . --write"
 	},
@@ -26,6 +26,7 @@
 		"libsodium-wrappers": "^0.8.2",
 		"mysql2": "^3.20.0",
 		"node-fetch": "^3.3.2",
+		"tsx": "^4.21.0",
 		"tweetnacl": "^1.0.3"
 	},
 	"overrides": {
@@ -36,7 +37,6 @@
 		"@types/express": "^5.0.6",
 		"@types/node": "^22.19.19",
 		"prisma": "^7.8.0",
-		"tsx": "^4.21.0",
 		"typescript": "^5.9.3"
 	}
 }

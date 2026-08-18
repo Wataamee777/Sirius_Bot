@@ -19,22 +19,30 @@ const event = {
 		const waitForShardsReady = async (): Promise<void> => {
 			if (!client.shard) return;
 
-			let ready = false;
+			let attempts = 0;
+			const maxAttempts = 15;
 
-			while (!ready) {
+			while (attempts < maxAttempts) {
 				try {
 					const statuses = await client.shard.broadcastEval((c) => c.ws.status);
 
 					// 0 = READY
-					ready = statuses.every((s) => s === 0);
-				} catch {
-					ready = false;
+					if (statuses.every((s) => s === 0)) {
+						return;
+					}
+				} catch (err) {
+					console.warn(
+						`⚠️ [Shard ${shardId}] broadcastEval ready check retry (${attempts + 1}/${maxAttempts})`,
+					);
 				}
 
-				if (!ready) {
-					await new Promise((r) => setTimeout(r, 2000));
-				}
+				attempts++;
+				await new Promise((r) => setTimeout(r, 2000));
 			}
+
+			console.warn(
+				`⚠️ [Shard ${shardId}] 全シャード準備完了の確認がタイムアウトしました。処理を続行します。`,
+			);
 		};
 
 		await waitForShardsReady();

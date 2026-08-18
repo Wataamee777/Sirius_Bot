@@ -1,3 +1,4 @@
+import * as dns from "node:dns";
 import * as fsPromises from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -15,6 +16,8 @@ import * as dotenv from "dotenv";
 import express, { type Request, type Response } from "express";
 import { initErrorReporting } from "@/utils/errorWebhook";
 import { ensureJsonDataDir } from "@/utils/jsonFileStore";
+
+dns.setDefaultResultOrder("ipv4first");
 
 dotenv.config();
 initErrorReporting();
@@ -112,8 +115,10 @@ const parseCurrentShardId = () => {
 	return Number.isNaN(parsedInt) ? 0 : parsedInt;
 };
 
-const createClient = () =>
+const createClient = (shardId: number) =>
 	new ExtendedClient({
+		shards: shardId,
+		shardCount: TOTAL_SHARDS,
 		intents: [
 			GatewayIntentBits.Guilds,
 			GatewayIntentBits.GuildMessages,
@@ -611,9 +616,9 @@ async function loadEvents(client: ExtendedClient) {
 }
 
 async function runShardProcess() {
-	const client = createClient();
-	const rest = new REST({ version: "10" }).setToken(token);
 	const shardId = parseCurrentShardId();
+	const client = createClient(shardId);
+	const rest = new REST({ version: "10" }).setToken(token);
 	const primaryShard = shardId === 0;
 
 	await ensureJsonDataDir();
@@ -627,21 +632,44 @@ async function runShardProcess() {
 	client.on("error", (error) => {
 		console.error("❌ Client error", error);
 	});
+	client.on("shardError", (error, id) => {
+		console.error(`❌ Shard ${id} error:`, error);
+	});
+	client.on("shardDisconnect", (event, id) => {
+		console.warn(`⚠️ Shard ${id} disconnected (code: ${event.code})`);
+	});
+	client.on("shardReconnecting", (id) => {
+		console.log(`🔁 Shard ${id} reconnecting...`);
+	});
+	client.on("shardResume", (id, replayed) => {
+		console.log(`✅ Shard ${id} resumed (${replayed} events replayed)`);
+	});
+	client.on("warn", (info) => {
+		console.warn("⚠️ Client warn:", info);
+	});
+	client.on("invalidated", () => {
+		console.error("❌ Client session invalidated!");
+	});
 
+	console.log(`⏳ [Shard ${shardId}] Discord にログイン中...`);
 	await client.login(token);
 
 	if (primaryShard) {
-		const slashCommands = client.commands.map((command) =>
-			command.data.toJSON(),
-		);
+		try {
+			const slashCommands = client.commands.map((command) =>
+				command.data.toJSON(),
+			);
 
-		await rest.put(Routes.applicationCommands(applicationId), {
-			body: slashCommands,
-		});
+			await rest.put(Routes.applicationCommands(applicationId), {
+				body: slashCommands,
+			});
 
-		console.log(
-			`✅ [Shard ${shardId}] コマンド登録完了: ${slashCommands.length}`,
-		);
+			console.log(
+				`✅ [Shard ${shardId}] コマンド登録完了: ${slashCommands.length}`,
+			);
+		} catch (slashError) {
+			console.error("❌ コマンド登録に失敗しました:", slashError);
+		}
 	} else {
 		console.log(`ℹ️ [Shard ${shardId}] コマンド登録をスキップ`);
 	}
