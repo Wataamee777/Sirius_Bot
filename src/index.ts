@@ -545,7 +545,7 @@ async function loadEvents(client: ExtendedClient) {
 
 async function runShardProcess() {
 	const client = createClient();
-	const rest = new REST({ version: "10", agent: proxyAgent }).setToken(token);
+	const rest = new REST({ version: "10", agent: restProxyAgent }).setToken(token);
 	const shardId = parseCurrentShardId();
 	const primaryShard = shardId === 0;
 
