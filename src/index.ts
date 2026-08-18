@@ -1,4 +1,3 @@
-import * as dns from "node:dns";
 import * as fsPromises from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -6,7 +5,6 @@ import cors from "cors";
 import {
 	Client,
 	Collection,
-	Events,
 	GatewayIntentBits,
 	Partials,
 	REST,
@@ -17,8 +15,6 @@ import * as dotenv from "dotenv";
 import express, { type Request, type Response } from "express";
 import { initErrorReporting } from "@/utils/errorWebhook";
 import { ensureJsonDataDir } from "@/utils/jsonFileStore";
-
-dns.setDefaultResultOrder("ipv4first");
 
 dotenv.config();
 initErrorReporting();
@@ -116,10 +112,8 @@ const parseCurrentShardId = () => {
 	return Number.isNaN(parsedInt) ? 0 : parsedInt;
 };
 
-const createClient = (shardId: number) =>
+const createClient = () =>
 	new ExtendedClient({
-		shards: shardId,
-		shardCount: TOTAL_SHARDS,
 		intents: [
 			GatewayIntentBits.Guilds,
 			GatewayIntentBits.GuildMessages,
@@ -131,12 +125,7 @@ const createClient = (shardId: number) =>
 		partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 	});
 
-let isWebServerStarted = false;
-
-const startWebServer = (client: ExtendedClient, rest: REST) => {
-	if (isWebServerStarted) return;
-	isWebServerStarted = true;
-
+const setupApiRoutes = (client: ExtendedClient, rest: REST) => {
 	const app = express();
 	app.use(cors());
 
@@ -622,63 +611,37 @@ async function loadEvents(client: ExtendedClient) {
 }
 
 async function runShardProcess() {
-	const shardId = parseCurrentShardId();
-	const client = createClient(shardId);
+	const client = createClient();
 	const rest = new REST({ version: "10" }).setToken(token);
+	const shardId = parseCurrentShardId();
 	const primaryShard = shardId === 0;
 
 	await ensureJsonDataDir();
 	await loadCommands(client);
 	await loadEvents(client);
 
+	if (primaryShard) {
+		setupApiRoutes(client, rest);
+	}
+
 	client.on("error", (error) => {
 		console.error("❌ Client error", error);
 	});
-	client.on("shardError", (error, id) => {
-		console.error(`❌ Shard ${id} error:`, error);
-	});
-	client.on("shardDisconnect", (event, id) => {
-		console.warn(`⚠️ Shard ${id} disconnected (code: ${event.code})`);
-	});
-	client.on("shardReconnecting", (id) => {
-		console.log(`🔁 Shard ${id} reconnecting...`);
-	});
-	client.on("shardResume", (id, replayed) => {
-		console.log(`✅ Shard ${id} resumed (${replayed} events replayed)`);
-	});
-	client.on("warn", (info) => {
-		console.warn("⚠️ Client warn:", info);
-	});
-	client.on("invalidated", () => {
-		console.error("❌ Client session invalidated!");
-	});
 
-	client.once(Events.ClientReady, () => {
-		if (primaryShard) {
-			startWebServer(client, rest);
-		}
-	});
-
-	console.log(`⏳ [Shard ${shardId}] Discord にログイン中...`);
 	await client.login(token);
 
 	if (primaryShard) {
-		startWebServer(client, rest);
-		try {
-			const slashCommands = client.commands.map((command) =>
-				command.data.toJSON(),
-			);
+		const slashCommands = client.commands.map((command) =>
+			command.data.toJSON(),
+		);
 
-			await rest.put(Routes.applicationCommands(applicationId), {
-				body: slashCommands,
-			});
+		await rest.put(Routes.applicationCommands(applicationId), {
+			body: slashCommands,
+		});
 
-			console.log(
-				`✅ [Shard ${shardId}] コマンド登録完了: ${slashCommands.length}`,
-			);
-		} catch (slashError) {
-			console.error("❌ コマンド登録に失敗しました:", slashError);
-		}
+		console.log(
+			`✅ [Shard ${shardId}] コマンド登録完了: ${slashCommands.length}`,
+		);
 	} else {
 		console.log(`ℹ️ [Shard ${shardId}] コマンド登録をスキップ`);
 	}
