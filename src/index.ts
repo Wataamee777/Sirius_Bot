@@ -41,9 +41,20 @@ const TOTAL_SHARDS = SHARD_LIST.length;
 
 let restProxyAgent: ProxyAgent | undefined;
 if (PROXY_URL) {
-	restProxyAgent = new ProxyAgent(PROXY_URL);
+	const url = new URL(PROXY_URL);
+	if (url.username && url.password) {
+		const credentials = `${decodeURIComponent(url.username)}:${decodeURIComponent(url.password)}`;
+		const base64Credentials = Buffer.from(credentials).toString("base64");
+		restProxyAgent = new ProxyAgent({
+			uri: PROXY_URL,
+			token: `Basic ${base64Credentials}`, // 👈 これでundiciが認証情報を正しく認識します
+		});
+	} else {
+		restProxyAgent = new ProxyAgent(PROXY_URL);
+	}
 	setGlobalDispatcher(restProxyAgent);
 }
+
 /* ======================
    コマンド型
 ====================== */
