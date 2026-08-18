@@ -130,7 +130,12 @@ const createClient = (shardId: number) =>
 		partials: [Partials.Message, Partials.Channel, Partials.Reaction],
 	});
 
-const setupApiRoutes = (client: ExtendedClient, rest: REST) => {
+let isWebServerStarted = false;
+
+const startWebServer = (client: ExtendedClient, rest: REST) => {
+	if (isWebServerStarted) return;
+	isWebServerStarted = true;
+
 	const app = express();
 	app.use(cors());
 
@@ -526,12 +531,9 @@ const setupApiRoutes = (client: ExtendedClient, rest: REST) => {
 		},
 	);
 
-	console.log("⏳ Web server will start in 20 seconds...");
-	setTimeout(() => {
-		app.listen(process.env.PORT || 3000, () => {
-			console.log("Web server started");
-		});
-	}, 300_000);
+	app.listen(process.env.PORT || 3000, () => {
+		console.log("Web server started");
+	});
 };
 
 async function loadCommands(client: ExtendedClient) {
@@ -628,10 +630,6 @@ async function runShardProcess() {
 	await loadCommands(client);
 	await loadEvents(client);
 
-	if (primaryShard) {
-		setupApiRoutes(client, rest);
-	}
-
 	client.on("error", (error) => {
 		console.error("❌ Client error", error);
 	});
@@ -654,10 +652,17 @@ async function runShardProcess() {
 		console.error("❌ Client session invalidated!");
 	});
 
+	client.once(Events.ClientReady, () => {
+		if (primaryShard) {
+			startWebServer(client, rest);
+		}
+	});
+
 	console.log(`⏳ [Shard ${shardId}] Discord にログイン中...`);
 	await client.login(token);
 
 	if (primaryShard) {
+		startWebServer(client, rest);
 		try {
 			const slashCommands = client.commands.map((command) =>
 				command.data.toJSON(),
