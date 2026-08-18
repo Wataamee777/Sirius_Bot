@@ -2,6 +2,7 @@ import * as fsPromises from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import cors from "cors";
+import { ProxyAgent } from "undici";
 import {
 	Client,
 	Collection,
@@ -19,6 +20,8 @@ import { ensureJsonDataDir } from "@/utils/jsonFileStore";
 dotenv.config();
 initErrorReporting();
 
+const PROXY_URL = process.env.HTTPS_PROXY ?? process.env.HTTP_PROXY;
+
 const token = process.env.DISCORD_BOT_TOKEN ?? "";
 
 if (!token) {
@@ -34,6 +37,7 @@ if (!applicationId) {
 const SHARD_LIST = [0] as const;
 const TOTAL_SHARDS = SHARD_LIST.length;
 
+const proxyAgent = PROXY_URL ? new ProxyAgent(PROXY_URL) : undefined;
 /* ======================
    コマンド型
 ====================== */
@@ -114,6 +118,9 @@ const parseCurrentShardId = () => {
 
 const createClient = () =>
 	new ExtendedClient({
+		rest: {
+			agent: proxyAgent,
+		},
 		intents: [
 			GatewayIntentBits.Guilds,
 			GatewayIntentBits.GuildMessages,
@@ -521,7 +528,7 @@ async function loadEvents(client: ExtendedClient) {
 
 async function runShardProcess() {
 	const client = createClient();
-	const rest = new REST({ version: "10" }).setToken(token);
+	const rest = new REST({ version: "10", agent: proxyAgent }).setToken(token);
 	const shardId = parseCurrentShardId();
 	const primaryShard = shardId === 0;
 
