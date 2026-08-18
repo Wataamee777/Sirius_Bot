@@ -6,6 +6,7 @@ import cors from "cors";
 import {
 	Client,
 	Collection,
+	Events,
 	GatewayIntentBits,
 	Partials,
 	REST,
