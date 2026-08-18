@@ -12,6 +12,8 @@ RUN bun install --frozen-lockfile
 
 COPY . .
 
+ENV DATABASE_URL="mysql://dummy:dummy@dummy:3306/dummy"
+
 RUN bunx prisma generate
 
 USER bun
