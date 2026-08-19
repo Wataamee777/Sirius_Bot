@@ -22,7 +22,6 @@ RUN bun install --frozen-lockfile
 # Source
 COPY apps/web ./apps/web
 COPY packages/database ./packages/database
-COPY prisma.config.ts ./
 COPY tsconfig.json ./
 
 # Prisma

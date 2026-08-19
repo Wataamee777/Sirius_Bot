@@ -44,7 +44,6 @@ COPY apps/web/package.json ./apps/web/package.json
 
 COPY packages/database ./packages/database
 
-COPY prisma.config.ts ./
 COPY tsconfig.json ./
 
 RUN bun --cwd packages/database db:generate
