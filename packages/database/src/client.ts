@@ -1,5 +1,4 @@
 import "dotenv/config";
-import fs from "node:fs";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 import { PrismaClient } from "@prisma/client";
 
@@ -23,17 +22,6 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 	throw new Error(`Invalid DATABASE_PORT: ${process.env.DATABASE_PORT}`);
 }
 
-const ssl = process.env.DATABASE_CA_PATH
-	? {
-			ca: fs.readFileSync(process.env.DATABASE_CA_PATH, "utf8"),
-			rejectUnauthorized: true,
-			servername: process.env.DATABASE_HOST,
-		}
-	: {
-			rejectUnauthorized: true,
-			servername: process.env.DATABASE_HOST,
-		};
-
 const adapter = new PrismaMariaDb({
 	host: process.env.DATABASE_HOST,
 	port,
@@ -41,7 +29,6 @@ const adapter = new PrismaMariaDb({
 	password: process.env.DATABASE_PASSWORD,
 	database: process.env.DATABASE_NAME,
 	connectionLimit: 5,
-	ssl,
 });
 
 const prismaClientSingleton = (): PrismaClient => {
