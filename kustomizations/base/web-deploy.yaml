@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: web
-          image: ghcr.io/oruger-0730/sirius-web:1.0.29
+          image: ghcr.io/oruger-0730/sirius-web:1.0.33
           envFrom:
             - secretRef:
                 name: web-secret
