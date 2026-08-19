@@ -22,7 +22,7 @@ spec:
             - secretRef:
                 name: bot-secret
             - secretRef:
-                name: common-secret
+                name: common-secrets
           resources:
             requests:
               cpu: 500m # 必要最低限の0.5CPUを確保

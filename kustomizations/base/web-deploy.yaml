@@ -20,9 +20,9 @@ spec:
           image: ghcr.io/oruger-0730/sirius-web:1.0.15
           envFrom:
             - secretRef:
-                name: web-secret
+                name: web-secrets
             - secretRef:
-                name: common-secret
+                name: common-secrets
           resources:
             requests:
               cpu: 500m # 必要最低限の0.5CPUを確保
