@@ -5,3 +5,4 @@ resources:
   - ./web-deploy.yaml
   - ./secret.yaml
   - ./gateway.yaml
+  - ./mysql.yaml

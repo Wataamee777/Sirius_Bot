@@ -1,94 +1,76 @@
-# --------------------------------------------------
-# Base
-# --------------------------------------------------
-FROM ghcr.io/pnpm/pnpm:11 AS base
-
-RUN pnpm runtime set node 24 -g
-
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
-  git \
-  ca-certificates \
-  openssl \
-  && rm -rf /var/lib/apt/lists/*
+FROM oven/bun:1 AS base
 
 WORKDIR /app
 
-ENV DATABASE_HOST="dummy" \
-  DATABASE_PORT="3306" \
-  DATABASE_USER="dummy" \
-  DATABASE_PASSWORD="dummy" \
-  DATABASE_NAME="dummy"
-
+# Prisma / DB config for build-time evaluation
+ENV DATABASE_HOST="dummy"
+ENV DATABASE_PORT="3306"
+ENV DATABASE_USER="dummy"
+ENV DATABASE_PASSWORD="dummy"
+ENV DATABASE_NAME="dummy"
 
 # --------------------------------------------------
 # Dependencies
 # --------------------------------------------------
+
 FROM base AS deps
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
+COPY package.json bun.lock ./
 
 COPY apps/bot/package.json ./apps/bot/package.json
 COPY apps/web/package.json ./apps/web/package.json
+
 COPY packages/database/package.json ./packages/database/package.json
 
-RUN pnpm install --frozen-lockfile
+RUN bun install --frozen-lockfile
 
 
 # --------------------------------------------------
 # Builder
 # --------------------------------------------------
+
 FROM base AS builder
 
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY --from=deps /app/packages/database/node_modules ./packages/database/node_modules
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json prisma.config.ts* .npmrc* ./
+COPY package.json bun.lock ./
 
 COPY apps/web ./apps/web
 COPY packages/database ./packages/database
 
-RUN pnpm --filter @sirius/database db:generate
+COPY prisma.config.ts ./
+COPY tsconfig.json ./
 
-RUN pnpm --filter web build
+# Prisma Client
+RUN bun --cwd packages/database db:generate
+
+# Next.js build
+RUN bun --cwd apps/web build
 
 
 # --------------------------------------------------
 # Runtime
 # --------------------------------------------------
-FROM base AS runner
+
+FROM oven/bun:1-slim AS runner
+
+WORKDIR /app
+
+COPY certs/ ./certs/
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
-ENV HOSTNAME=0.0.0.0
 
-RUN groupadd --system --gid 1001 nodejs \
-  && useradd --system --uid 1001 --gid 1001 nextjs
+COPY --from=builder /app/apps/web/.next/standalone ./
 
-# node_modules をそのまま持ってくる
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=builder /app/apps/web/.next/static \
+  ./apps/web/.next/static
 
-# Next.js build
-COPY --from=builder /app/apps/web/.next ./apps/web/.next
-COPY --from=builder /app/apps/web/public ./apps/web/public
-
-# package.json
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/apps/web/package.json ./apps/web/package.json
-
-# 必要なら cert
-COPY certs/ ./certs/
-
-RUN chown -R nextjs:nodejs /app
-
-USER nextjs
+COPY --from=builder /app/apps/web/public \
+  ./apps/web/public
 
 EXPOSE 3000
 
-CMD ["pnpm", "--filter", "web", "start"]
+CMD ["bun", "apps/web/server.js"]
