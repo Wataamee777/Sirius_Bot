@@ -2,7 +2,6 @@ FROM oven/bun:1 AS base
 
 WORKDIR /app
 
-# Prisma / DB config for build-time evaluation
 ENV DATABASE_HOST="dummy"
 ENV DATABASE_PORT="3306"
 ENV DATABASE_USER="dummy"
@@ -19,10 +18,13 @@ COPY package.json bun.lock ./
 
 COPY apps/bot/package.json ./apps/bot/package.json
 COPY apps/web/package.json ./apps/web/package.json
-
 COPY packages/database/package.json ./packages/database/package.json
 
 RUN bun install --frozen-lockfile
+
+# DEBUG
+RUN ls -la node_modules/.bin/next
+RUN node_modules/.bin/next --version
 
 # --------------------------------------------------
 # Builder
@@ -35,41 +37,13 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 
 COPY package.json bun.lock ./
-
 COPY apps/web ./apps/web
 COPY packages/database ./packages/database
-
 COPY prisma.config.ts ./
 COPY tsconfig.json ./
 
-# Prisma Client
 RUN bun --cwd packages/database db:generate
 
-# Next.js build
+RUN bun --cwd apps/web exec next --version
+
 RUN bun build:web
-
-
-# --------------------------------------------------
-# Runtime
-# --------------------------------------------------
-
-FROM oven/bun:1-slim AS runner
-
-WORKDIR /app
-
-COPY certs/ ./certs/
-
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
-COPY --from=builder /app/apps/web/.next/standalone ./
-
-COPY --from=builder /app/apps/web/.next/static \
-  ./apps/web/.next/static
-
-COPY --from=builder /app/apps/web/public \
-  ./apps/web/public
-
-EXPOSE 3000
-
-CMD ["bun", "apps/web/server.js"]
