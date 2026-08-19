@@ -8,7 +8,7 @@
 	],
 	"scripts": {
 		"dev:web": "bun --cwd apps/web dev",
-		"dev:bot": "bun --cwd @apps/bot dev",
+		"dev:bot": "bun --cwd apps/bot dev",
 		"build:web": "bun --cwd apps/web build",
 		"build:bot": "bun --cwd apps/bot build",
 		"check": "biome check .",

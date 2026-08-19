@@ -72,4 +72,4 @@ COPY --from=builder /app/prisma.config.ts ./
 
 COPY certs/ ./certs/
 
-CMD ["sh", "-c", "bun --cwd packages/database prisma migrate deploy && bun apps/bot/src/index.ts"]
+CMD ["sh", "-c", "bun --cwd packages/database db:migrate && bun apps/bot/src/index.ts"]
