@@ -1,41 +1,26 @@
 {
-	"name": "sirius-system",
-	"version": "1.0.2",
-	"description": "Discord bot for Sirius project",
-	"type": "module",
+	"name": "sirius",
 	"private": true,
-	"main": "index.ts",
+	"version": "1.0.15",
+	"workspaces": [
+		"apps/*",
+		"packages/*"
+	],
 	"scripts": {
-		"dev": "tsx src/index.ts",
-		"build": "npx prisma generate && npx tsc --noEmit",
-		"start": "tsx src/index.ts",
-		"lint": "biome check . --write",
-		"format": "biome format . --write"
+		"dev:web": "pnpm --filter @sirius/web dev",
+		"dev:bot": "pnpm --filter @sirius/bot dev",
+		"build:web": "pnpm --filter @sirius/web build",
+		"build:bot": "pnpm --filter @sirius/bot build",
+		"check": "biome check .",
+		"check:fix": "biome check . --write",
+		"format": "biome format --write .",
+		"typecheck": "tsc --build"
 	},
 	"dependencies": {
-		"@discordjs/voice": "^0.19.2",
-		"@prisma/adapter-mariadb": "^7.9.1",
-		"@prisma/client": "^7.9.1",
-		"@types/cors": "^2.8.19",
-		"cors": "^2.8.6",
-		"discord.js": "^14.27.0",
-		"dotenv": "^17.4.2",
-		"express": "^5.2.1",
-		"ffmpeg": "^0.0.4",
-		"global-agent": "^4.1.3",
-		"google-tts-api": "^2.0.2",
-		"libsodium-wrappers": "^0.8.4",
-		"mysql2": "^3.23.3",
-		"node-fetch": "^3.3.2",
-		"tsx": "^4.23.12",
-		"tweetnacl": "^1.0.3"
+		"dotenv": "^17.4.2"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.5.9",
-		"@types/express": "^5.0.6",
-		"@types/node": "^22.20.1",
-		"@types/global-agent": "^3.0.0",
-		"prisma": "^7.9.1",
-		"typescript": "^5.9.3"
+		"prisma": "^7.9.1"
 	}
 }

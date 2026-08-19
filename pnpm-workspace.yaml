@@ -1,0 +1,12 @@
+allowBuilds:
+  '@parcel/watcher': true
+  "@prisma/engines": true
+  esbuild: true
+  prisma: true
+
+minimumReleaseAgeExclude:
+  - lucide-react@1.32.0
+
+packages:
+  - "apps/*"
+  - "packages/*"

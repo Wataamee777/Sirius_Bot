@@ -1,46 +1,80 @@
-name: SiriusBot
+name: sirius
+
 services:
-  bot:
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    image: siriusbot:latest
-    env_file: ./.env
-    depends_on:
-      - db
-  db:
-    image: mysql:9
-    container_name: mysql_host
+  web:
+    #build:
+    #  context: .
+    #  dockerfile: Dockerfile.web
+    image: ghcr.io/oruger-0730/sirius-web:1.0.15
+    platform: linux/amd64
+    env_file:
+      - .env
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: test_database
-      MYSQL_USER: docker
-      MYSQL_PASSWORD: docker
-      TZ: "Asia/Tokyo"
-    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+  bot:
+    #build:
+    #  context: .
+    #  dockerfile: Dockerfile.bot
+    image: ghcr.io/oruger-0730/sirius-bot:1.0.10
+    platform: linux/amd64
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: mariadb:11
+    container_name: sirius_db
+    environment:
+      MARIADB_ROOT_PASSWORD: root
+      MARIADB_DATABASE: test_database
+      MARIADB_USER: docker
+      MARIADB_PASSWORD: docker
+      TZ: Asia/Tokyo
+    command:
+      - mariadbd
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
     volumes:
       - ./docker/db/data:/var/lib/mysql
       - ./docker/db/my.cnf:/etc/mysql/conf.d/my.cnf
       - ./docker/db/sql:/docker-entrypoint-initdb.d
     ports:
-      - 3306:3306
+      - "3306:3306"
     healthcheck:
       test:
         [
           "CMD-SHELL",
-          "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent",
+          "mariadb-admin ping -h localhost -uroot -p$${MARIADB_ROOT_PASSWORD} --silent",
         ]
       interval: 5s
       timeout: 3s
       retries: 12
       start_period: 30s
+    restart: unless-stopped
+
   phpmyadmin:
-    container_name: test_phpmyadmin
-    image: phpmyadmin/phpmyadmin:latest
+    image: phpmyadmin:latest
+    container_name: sirius_phpmyadmin
     environment:
-      - PMA_ARBITRARY=1
-      - PMA_HOSTS=mysql_host
-      - PMA_USER=root
-      - PMA_PASSWORD=root
+      PMA_HOST: db
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: root
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
-      - 8080:80
+      - "8080:80"
+    restart: unless-stopped

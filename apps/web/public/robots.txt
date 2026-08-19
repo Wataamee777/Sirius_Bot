@@ -1,0 +1,7 @@
+User-agent: *
+
+Disallow: /dashboard
+Disallow: /dashboard/guild
+Disallow: /dashboard/guild/
+
+Allow: /

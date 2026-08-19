@@ -1,0 +1,21 @@
+{
+	"name": "@sirius/database",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"db:generate": "prisma generate"
+	},
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"dependencies": {
+		"@prisma/adapter-mariadb": "^7.9.1",
+		"@prisma/client": "^7.9.1",
+		"mysql2": "^3.23.3"
+	},
+	"devDependencies": {
+		"@types/node": "^24.13.3",
+		"prisma": "^7.9.1",
+		"typescript": "^5.9.3"
+	}
+}

@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bot
+  labels:
+    app: bot
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bot
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: bot
+    spec:
+      containers:
+        - name: bot
+          image: ghcr.io/oruger-0730/sirius-bot:1.0.15
+          envFrom:
+            - secretRef:
+                name: bot-secret
+            - secretRef:
+                name: common-secret
+          resources:
+            requests:
+              cpu: 500m # 必要最低限の0.5CPUを確保
+              memory: 64Mi # 必要最低限の64MiBを確保
+            limits:
+              cpu: 1000m # 最大1CPUまで使用可能
+              memory: 128Mi # 最大128MiBまで使用可能

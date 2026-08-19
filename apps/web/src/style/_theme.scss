@@ -1,0 +1,17 @@
+@use "sass:map";
+
+$background-color: #0d0d0d !default;
+$text-color: #ffffff !default;
+$font-family: sans-serif !default;
+
+$breakpoints: (
+  "sp": "(max-width: 480px)",
+  "tab": "(max-width: 768px)",
+  "pc": "(min-width: 769px)",
+);
+
+@mixin mq($breakpoint: sp) {
+  @media #{map.get($breakpoints, $breakpoint)} {
+    @content;
+  }
+}

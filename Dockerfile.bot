@@ -1,0 +1,73 @@
+# --------------------------------------------------
+# Base
+# --------------------------------------------------
+FROM ghcr.io/pnpm/pnpm:11 AS base
+
+RUN pnpm runtime set node 24 -g
+
+WORKDIR /app
+
+ENV DATABASE_HOST="dummy" \
+  DATABASE_PORT="3306" \
+  DATABASE_USER="dummy" \
+  DATABASE_PASSWORD="dummy" \
+  DATABASE_NAME="dummy"
+
+
+# --------------------------------------------------
+# Dependencies
+# --------------------------------------------------
+FROM base AS deps
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc* ./
+COPY apps/bot/package.json ./apps/bot/package.json
+COPY apps/web/package.json ./apps/web/package.json
+COPY packages/database/package.json ./packages/database/package.json
+
+RUN pnpm install --frozen-lockfile
+
+
+# --------------------------------------------------
+# Build / Generate
+# --------------------------------------------------
+FROM base AS builder
+
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps/bot/node_modules ./apps/bot/node_modules
+COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
+COPY --from=deps /app/packages/database/node_modules ./packages/database/node_modules
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json prisma.config.ts .npmrc* ./
+
+COPY packages/database ./packages/database
+COPY apps/bot ./apps/bot
+
+RUN pnpm -F @sirius/database db:generate
+
+
+# --------------------------------------------------
+# Runtime
+# --------------------------------------------------
+FROM base AS runner
+
+ENV NODE_ENV=production
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+  ca-certificates \
+  openssl \
+  && rm -rf /var/lib/apt/lists/*
+
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/apps/bot/node_modules ./apps/bot/node_modules
+COPY --from=builder /app/packages/database/node_modules ./packages/database/node_modules
+
+COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
+
+COPY --from=builder /app/apps/bot ./apps/bot
+COPY --from=builder /app/packages/database ./packages/database
+
+COPY certs ./certs
+
+CMD ["pnpm", "-F", "@sirius/bot", "start"]

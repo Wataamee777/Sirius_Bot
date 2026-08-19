@@ -1,0 +1,419 @@
+button {
+  /* 背景を薄いグレーから白への縦グラデーションに */
+  background: linear-gradient(to bottom, #ffffff 0%, #e0e0e0 100%);
+  color: #1a1a1a;
+  /* 文字は背景に合わせて濃い黒 */
+  border: none;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 8px;
+  /* 角を少し丸く */
+  cursor: pointer;
+  transition: all 0.3s;
+  /* 変化をなめらかに */
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.1);
+  /* ほんのり影 */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  justify-items: center;
+  gap: 6px;
+}
+
+/* マウスをのせた時の演出 */
+button:hover {
+  background: #ffffff;
+  /* より明るく */
+  transform: translateY(-2px);
+  /* 少し浮き上がる */
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.3);
+  /* 光を強くする */
+}
+
+/* 🌌 背景 */
+#stars {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+/* ===== メイン中央 ===== */
+#center {
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ===== セクション ===== */
+section {
+  padding: 80px 20px;
+  text-align: center;
+}
+
+/* ボタン */
+.btn {
+  padding: 10px 20px;
+  background: white;
+  color: black;
+  text-decoration: none;
+  border-radius: 6px;
+}
+
+/* アニメーションの動きを定義（名前：fadeIn） */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    /* 最初は透明 */
+    transform: translateY(10px);
+    /* 少し下からスタート */
+  }
+
+  to {
+    opacity: 1;
+    /* 最後はくっきり */
+    transform: translateY(0);
+    /* 本来の位置へ */
+  }
+}
+
+/* クラス名「.animation」が付いた要素に適用 */
+.animation {
+  text-align: left;
+  color: #e0e0e0;
+  /* 黒背景に馴染む薄いグレー */
+  animation: fadeIn 1.2s ease-out forwards;
+  /* 1.2秒かけてふわっと */
+}
+
+/* カードを横並びにする設定 */
+.staff-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* 運営カード本体 */
+.staff-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+  color: #1a1a1a;
+  width: 200px;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+  /* 前回の「ふわっと」アニメーションを適用 */
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+/* アイコン（丸くする） */
+.staff-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  margin-bottom: 10px;
+  border: 3px solid #ddd;
+}
+
+/* 共通のタグスタイル */
+.role-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 50px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #fff;
+  margin-top: 8px;
+}
+
+/* 役職別の色（黒背景に映える鮮やかな色） */
+.role-owner {
+  background: #09bdd9;
+}
+
+/* 金 */
+.role-admin {
+  background: #f1c40f;
+}
+
+.role-moderater {
+  background: #fe0000;
+}
+
+.role-supporter {
+  background: #71358a;
+}
+
+/* 名前 */
+.staff-name {
+  margin: 10px 0 5px 0;
+  font-size: 1.1rem;
+  color: #1a1a1a;
+}
+
+/* アンカーリンクで飛んだ時にヘッダーと被らないようにする（重要） */
+html {
+  scroll-behavior: smooth;
+  /* スクロールをなめらかに */
+}
+
+.commands-container {
+  max-width: 900px;
+  margin: 100px auto 0;
+  padding: 20px;
+}
+
+.command-section {
+  margin-bottom: 40px;
+}
+
+.category-title {
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  border-left: 4px solid #fff;
+  padding-left: 10px;
+}
+
+.command-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.command-card {
+  background: #111;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #222;
+}
+
+.command-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.command-desc {
+  color: #aaa;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+.about-page {
+  width: min(960px, 92%);
+  margin: 10px 0 auto;
+  padding: 30px 0 70px;
+  margin-bottom: 28px;
+}
+
+.about-badge {
+  display: inline-block;
+  margin: 0 0 10px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+}
+
+.about-title {
+  margin: 0 0 12px;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+.about-lead {
+  margin: 0;
+  line-height: 1.8;
+  color: #ddd;
+}
+
+.about-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.about-link-btn {
+  text-decoration: none;
+  background: #fff;
+  color: #111;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+}
+
+.about-link-btn.secondary {
+  background: transparent;
+  color: #fff;
+  border: 1px solid #888;
+}
+
+.about-section {
+  margin-bottom: 24px;
+}
+
+.about-section h2 {
+  margin-bottom: 14px;
+}
+
+.about-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.about-card {
+  background: #111;
+  border: 1px solid #272727;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.about-card h3 {
+  margin-top: 0;
+}
+
+.about-card p {
+  margin-bottom: 0;
+  color: #bbb;
+  line-height: 1.7;
+}
+
+.about-roadmap {
+  margin: 0 auto;
+  width: fit-content;
+  text-align: left;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 10px;
+  background: #fff;
+  color: #111;
+  padding: 8px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  z-index: 2000;
+}
+
+.skip-link:focus {
+  left: 10px;
+}
+
+.home-hero {
+  width: min(920px, 92%);
+  margin: 30px auto;
+  padding: 34px;
+  border-radius: 18px;
+  background: linear-gradient(125deg,
+      rgba(15, 33, 54, 0.8),
+      rgba(39, 21, 57, 0.82));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  text-align: left;
+}
+
+.home-badge {
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+}
+
+.home-hero h1 {
+  margin: 0 0 14px;
+  font-size: clamp(2rem, 5vw, 3rem);
+}
+
+.home-lead {
+  margin: 0;
+  color: #ddd;
+  line-height: 1.8;
+}
+
+.home-actions {
+  margin-top: 24px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.home-link-btn {
+  text-decoration: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  background: #fff;
+  color: #111;
+}
+
+.home-link-btn.secondary {
+  background: transparent;
+  border: 1px solid #777;
+  color: #fff;
+}
+
+.commands-intro {
+  margin: 0 0 12px;
+  color: #c8c8c8;
+}
+
+.commands-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.commands-toolbar label {
+  font-size: 14px;
+  color: #cfcfcf;
+}
+
+.commands-toolbar input {
+  width: min(320px, 100%);
+  background: #0f0f0f;
+  color: #fff;
+  border: 1px solid #303030;
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+
+.commands-empty {
+  color: #bbb;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* SVGの暴走を止める魔法 */
+svg {
+  width: 1.2em;
+  height: 1.2em;
+  fill: currentColor;
+  /* 文字と同じ色にする */
+  vertical-align: middle;
+  display: inline-block;
+}
