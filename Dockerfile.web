@@ -24,7 +24,6 @@ COPY packages/database/package.json ./packages/database/package.json
 
 RUN bun install --frozen-lockfile
 
-
 # --------------------------------------------------
 # Builder
 # --------------------------------------------------
@@ -47,7 +46,7 @@ COPY tsconfig.json ./
 RUN bun --cwd packages/database db:generate
 
 # Next.js build
-RUN bun --cwd apps/web build
+RUN bun build:web
 
 
 # --------------------------------------------------

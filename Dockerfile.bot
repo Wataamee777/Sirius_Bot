@@ -49,7 +49,6 @@ COPY tsconfig.json ./
 
 RUN bun --cwd packages/database db:generate
 
-
 # --------------------------------------------------
 # Runtime
 # --------------------------------------------------

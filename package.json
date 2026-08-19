@@ -7,10 +7,10 @@
 		"packages/*"
 	],
 	"scripts": {
-		"dev:web": "pnpm --filter @sirius/web dev",
-		"dev:bot": "pnpm --filter @sirius/bot dev",
-		"build:web": "pnpm --filter @sirius/web build",
-		"build:bot": "pnpm --filter @sirius/bot build",
+		"dev:web": "bun --cwd apps/web dev",
+		"dev:bot": "bun --cwd @apps/bot dev",
+		"build:web": "bun --cwd apps/web build",
+		"build:bot": "bun --cwd apps/bot build",
 		"check": "biome check .",
 		"check:fix": "biome check . --write",
 		"format": "biome format --write .",
