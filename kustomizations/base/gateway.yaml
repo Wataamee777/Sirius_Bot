@@ -1,0 +1,59 @@
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: dualstack-proxy-config
+spec:
+  ipFamily: DualStack
+  logging:
+    level:
+      default: warn
+  provider:
+    kubernetes:
+      envoyDeployment:
+        pod:
+          tolerations:
+            - effect: NoSchedule
+              key: node-role.kubernetes.io/control-plane
+              operator: Exists
+    type: Kubernetes
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: sirius-gateway
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  gatewayClassName: envoy-gateway
+  infrastructure:
+    parametersRef:
+      group: gateway.envoyproxy.io
+      kind: EnvoyProxy
+      name: dualstack-proxy-config
+  listeners:
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: "*.siriusbot.f5.si"
+      name: https-wildcard
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: wildcard-siriusbot-tls
+        mode: Terminate
+    - allowedRoutes:
+        namespaces:
+          from: All
+      hostname: "siriusbot.f5.si"
+      name: https-apex
+      port: 443
+      protocol: HTTPS
+      tls:
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: wildcard-siriusbot-tls
+        mode: Terminate

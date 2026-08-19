@@ -52,8 +52,7 @@ metadata:
   name: web-route
 spec:
   parentRefs:
-    - name: uniproject-jp-gateway
-      namespace: infra-gateway
+    - name: sirius-gateway
   hostnames:
     - "siriusbot.f5.si"
   rules:

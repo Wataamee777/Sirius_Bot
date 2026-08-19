@@ -4,3 +4,4 @@ resources:
   - ./bot-deploy.yaml
   - ./web-deploy.yaml
   - ./secret.yaml
+  - ./gateway.yaml
