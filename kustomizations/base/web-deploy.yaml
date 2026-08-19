@@ -63,6 +63,5 @@ spec:
       backendRefs:
         - name: web
           port: 3000
-      sessionPersistence:
-        sessionName: cookie
-        type: Cookie
+          kind: Service
+          group: ""
