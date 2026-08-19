@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: bot
-          image: ghcr.io/oruger-0730/sirius-bot:1.0.29
+          image: ghcr.io/oruger-0730/sirius-bot:1.0.30
           envFrom:
             - secretRef:
                 name: bot-secret
