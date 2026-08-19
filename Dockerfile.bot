@@ -49,8 +49,6 @@ COPY tsconfig.json ./
 
 RUN bun --cwd packages/database db:generate
 
-RUN bun --cwd apps/bot build
-
 
 # --------------------------------------------------
 # Runtime
