@@ -43,4 +43,4 @@ RUN apt-get update \
 # Copy everything from builder to retain complete workspace node_modules structure
 COPY --from=builder /app /app
 
-CMD ["sh", "-c", "bun --cwd packages/database db:migrate && bun apps/bot/src/index.ts"]
+CMD ["sh", "-c", "bun --cwd packages/database db:migrate:deploy && bun apps/bot/src/index.ts"]

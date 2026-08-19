@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -44,13 +45,14 @@ model ServerSetting {
   mentionReadoutNameOnly       Boolean  @default(false)
   mentionReadoutVolume         Int      @default(50)
   regexPatterns                String?
+  @@map("server_settings")
 }
 
 model Account {
   id                    String    @id @default(cuid()) @db.VarChar(255)
   userId                String    @db.VarChar(255)
   providerId            String    @db.VarChar(255)
-  accountId             String    @db.VarChar(255)
+  accountId             String    @db.VarChar(191)
   accessToken           String?   @db.Text
   refreshToken          String?   @db.Text
   expiresAt             DateTime? @db.DateTime(0)
@@ -64,7 +66,11 @@ model Account {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  issuer String @db.VarChar(191)
+
   @@map("account")
+  @@unique([issuer, accountId], map: "account_issuer_accountId_uidx")
+  @@index([userId(length: 191)])
 }
 
 model Session {
@@ -80,6 +86,7 @@ model Session {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("session")
+  @@index([userId(length: 191)])
 }
 
 model User {
@@ -105,6 +112,7 @@ model Verification {
   updatedAt  DateTime? @updatedAt
 
   @@map("verification")
+  @@index([identifier(length: 191)])
 }
 
 model SurvivalRanking {
@@ -157,16 +165,16 @@ model EconomyAccount {
 }
 
 model EconomyLog {
-  id            String        @id @default(cuid()) @db.VarChar(255)
-  discordId     String        @db.VarChar(255)
-  accountId     String?       @db.VarChar(255)
-  eventType     String        @db.VarChar(50)
-  amount        BigInt        @default(0)
-  balanceBefore BigInt        @default(0)
-  balanceAfter  BigInt        @default(0)
-  description   String?       @db.Text
-  metadata      String?       @db.Text
-  createdAt     DateTime      @default(now())
+  id             String          @id @default(cuid()) @db.VarChar(255)
+  discordId      String          @db.VarChar(255)
+  accountId      String?         @db.VarChar(255)
+  eventType      String          @db.VarChar(50)
+  amount         BigInt          @default(0)
+  balanceBefore  BigInt          @default(0)
+  balanceAfter   BigInt          @default(0)
+  description    String?         @db.Text
+  metadata       String?         @db.Text
+  createdAt      DateTime        @default(now())
   economyAccount EconomyAccount? @relation(fields: [accountId], references: [id], onDelete: SetNull)
 
   @@index([discordId])

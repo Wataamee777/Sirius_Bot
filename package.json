@@ -14,13 +14,17 @@
 		"check": "biome check .",
 		"check:fix": "biome check . --write",
 		"format": "biome format --write .",
-		"typecheck": "tsc --build"
+		"typecheck": "tsc --build",
+		"auth:generate": "dotenv -- bun --cwd apps/web auth:generate",
+		"db:migrate:dev": "dotenv -- bun --cwd packages/database db:migrate:dev",
+		"db:migrate:reset": "dotenv -- bun --cwd packages/database db:migrate:reset"
 	},
 	"dependencies": {
 		"@prisma/client": "^7.9.1",
 		"dotenv": "^17.4.2"
 	},
 	"devDependencies": {
+		"dotenv-cli": "^11.0.0",
 		"@biomejs/biome": "^2.5.9",
 		"prisma": "^7.9.1"
 	}

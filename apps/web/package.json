@@ -5,7 +5,8 @@
 		"dev": "next dev",
 		"build": "next build",
 		"build:webpack": "next build --webpack",
-		"start": "next start"
+		"start": "next start",
+		"auth:generate": "auth generate --output='../../packages/database/prisma/schema.prisma' --config='./src/lib/auth.ts'"
 	},
 	"dependencies": {
 		"@emotion/react": "^11.14.0",
@@ -15,6 +16,7 @@
 		"@next/third-parties": "^16.3.1",
 		"@sirius/database": "workspace:*",
 		"@swc/helpers": "^0.5.23",
+		"auth": "^1.7.1",
 		"better-auth": "^1.7.0",
 		"escape-html": "^1.0.3",
 		"gray-matter": "^4.0.3",
