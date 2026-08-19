@@ -4,7 +4,7 @@ const nextConfig: NextConfig = {
 	images: {
 		remotePatterns: [{ protocol: "https", hostname: "cdn.discordapp.com" }],
 	},
-	//output: "standalone",
+	output: "standalone",
 	serverExternalPackages: [
 		"mysql2",
 		"@prisma/client",
