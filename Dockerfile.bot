@@ -68,8 +68,6 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/apps/bot ./apps/bot
 COPY --from=builder /app/packages/database ./packages/database
 
-COPY --from=builder /app/prisma.config.ts ./
-
 COPY certs/ ./certs/
 
 CMD ["sh", "-c", "bun --cwd packages/database db:migrate && bun apps/bot/src/index.ts"]
