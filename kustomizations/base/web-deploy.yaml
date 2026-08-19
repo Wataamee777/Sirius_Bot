@@ -23,6 +23,9 @@ spec:
                 name: web-secret
             - secretRef:
                 name: common-secret
+          env:
+            - name: HOSTNAME
+              value: 0.0.0.0
           resources:
             requests:
               cpu: 500m # 必要最低限の0.5CPUを確保
